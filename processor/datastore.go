@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	_ "modernc.org/sqlite"
 
-	"github.com/aleksasiriski/rffmpeg-autoscaler/migrate"
+	"github.com/aleksasiriski/rffmpeg-go/migrate"
 )
 
 type datastore struct {

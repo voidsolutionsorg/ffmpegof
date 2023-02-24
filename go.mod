@@ -3,7 +3,6 @@ module github.com/aleksasiriski/rffmpeg-go
 go 1.19
 
 require (
-	github.com/aleksasiriski/rffmpeg-autoscaler v0.0.1
 	github.com/lib/pq v1.10.7
 	github.com/oriser/regroup v0.0.0-20210730155327-fca8d7531263
 	github.com/spf13/viper v1.15.0
