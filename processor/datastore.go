@@ -3,7 +3,6 @@ package processor
 import (
 	"embed"
 	"fmt"
-	"time"
 
 	"database/sql"
 	_ "github.com/lib/pq"
@@ -16,8 +15,6 @@ type datastore struct {
 	*sql.DB
 	dbType string
 }
-
-var now = time.Now
 
 var (
 	//go:embed migrations/sqlite
