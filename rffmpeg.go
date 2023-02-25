@@ -35,7 +35,7 @@ var (
 func main() {
 	// parse cli
 	ctx := kong.Parse(&cli,
-		kong.Name("rffmpeg-go"),
+		kong.Name("rffmpeg"),
 		kong.Description("Remote ffmpeg"),
 		kong.UsageOnError(),
 		kong.ConfigureHelp(kong.HelpOptions{
