@@ -22,17 +22,17 @@ type Host struct {
 }
 
 type Process struct {
-	Id         int
-	Host_id    int
-	Process_id int
-	Cmd        string
+	Id        int
+	HostId    int
+	ProcessId int
+	Cmd       string
 }
 
 type State struct {
-	Id         int
-	Host_id    int
-	Process_id int
-	State      string
+	Id        int
+	HostId    int
+	ProcessId int
+	State     string
 }
 
 func New(config Config) (*Processor, error) {
@@ -52,6 +52,8 @@ type Processor struct {
 	processed int64
 }
 
+// hosts
+
 func (p *Processor) AddHost(host Host) error {
 	return p.store.UpsertHost(host)
 }
@@ -68,6 +70,8 @@ func (p *Processor) GetAllHosts() ([]Host, error) {
 	return p.store.GetHosts()
 }
 
+// processes
+
 func (p *Processor) NumberOfProcesses() (int, error) {
 	return p.store.GetProcessesRemaining()
 }
@@ -83,6 +87,8 @@ func (p *Processor) GetAllProcesses() ([]Process, error) {
 func (p *Processor) GetAllProcessesFromHost(host Host) ([]Process, error) {
 	return p.store.GetProcessesWhere(host)
 }
+
+// states
 
 func (p *Processor) GetAllStatesFromHost(host Host) ([]State, error) {
 	return p.store.GetStatesWhere(host)

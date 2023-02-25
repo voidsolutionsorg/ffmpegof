@@ -3,9 +3,13 @@ module github.com/aleksasiriski/rffmpeg-go
 go 1.19
 
 require (
+	github.com/alecthomas/kong v0.7.1
 	github.com/lib/pq v1.10.7
 	github.com/oriser/regroup v0.0.0-20210730155327-fca8d7531263
+	github.com/rs/zerolog v1.29.0
+	github.com/sourcegraph/conc v0.2.0
 	github.com/spf13/viper v1.15.0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	modernc.org/sqlite v1.21.0
 )
 
@@ -16,6 +20,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
