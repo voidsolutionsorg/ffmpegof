@@ -73,12 +73,12 @@ func (p *Processor) GetHosts() ([]Host, error) {
 	return p.store.SelectHosts()
 }
 
-func (p *Processor) GetHostsByField(field string) ([]Host, error) {
-	return p.store.SelectHostsWhere(field)
+func (p *Processor) GetHostsByField(fieldType string, field string) ([]Host, error) {
+	return p.store.SelectHostsWhere(fieldType, field)
 }
 
-func (p *Processor) GetHostsIdByField(field string) ([]Host, error) {
-	return p.store.SelectHostsIdWhere(field)
+func (p *Processor) GetHostsIdByField(fieldType string, field string) ([]Host, error) {
+	return p.store.SelectHostsIdWhere(fieldType, field)
 }
 
 // processes
@@ -106,12 +106,12 @@ func (p *Processor) GetProcesses() ([]Process, error) {
 	return p.store.SelectProcesses()
 }
 
-func (p *Processor) GetProcessesByField(field string) ([]Process, error) {
-	return p.store.SelectProcessesWhere(field)
+func (p *Processor) GetProcessesFromHost(host Host) ([]Process, error) {
+	return p.store.SelectProcessesWhere(host)
 }
 
-func (p *Processor) GetProcessesIdByField(field string) ([]Process, error) {
-	return p.store.SelectProcessesIdWhere(field)
+func (p *Processor) GetProcessesIdFromHost(host Host) ([]Process, error) {
+	return p.store.SelectProcessesIdWhere(host)
 }
 
 // states
@@ -139,10 +139,10 @@ func (p *Processor) GetStates() ([]State, error) {
 	return p.store.SelectStates()
 }
 
-func (p *Processor) GetStatesByField(field string) ([]State, error) {
-	return p.store.SelectStatesWhere(field)
+func (p *Processor) GetStatesFromHost(host Host) ([]State, error) {
+	return p.store.SelectStatesWhere(host)
 }
 
-func (p *Processor) GetStatesIdByField(field string) ([]State, error) {
-	return p.store.SelectStatesIdWhere(field)
+func (p *Processor) GetStatesIdFromHost(host Host) ([]State, error) {
+	return p.store.SelectStatesIdWhere(host)
 }

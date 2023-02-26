@@ -200,14 +200,14 @@ func sqlSelectProcessesWhere(dbType string) (string, error) {
 	}
 }
 
-func (store *datastore) SelectProcessesWhere(field string) (processes []Process, err error) {
+func (store *datastore) SelectProcessesWhere(host Host) (processes []Process, err error) {
 	sqlSelectProcessesWhere, err := sqlSelectProcessesWhere(store.dbType)
 	if err != nil {
 		return processes, err
 	}
-	sqlSelectProcessesWhere = fmt.Sprintf(sqlSelectProcessesWhere, "*", field)
+	sqlSelectProcessesWhere = fmt.Sprintf(sqlSelectProcessesWhere, "*")
 
-	rows, err := store.Query(sqlSelectProcessesWhere)
+	rows, err := store.Query(sqlSelectProcessesWhere, host.Id)
 	if err != nil {
 		return processes, err
 	}
@@ -226,14 +226,14 @@ func (store *datastore) SelectProcessesWhere(field string) (processes []Process,
 	return processes, rows.Err()
 }
 
-func (store *datastore) SelectProcessesIdWhere(field string) (processes []Process, err error) {
+func (store *datastore) SelectProcessesIdWhere(host Host) (processes []Process, err error) {
 	sqlSelectProcessesWhere, err := sqlSelectProcessesWhere(store.dbType)
 	if err != nil {
 		return processes, err
 	}
-	sqlSelectProcessesWhere = fmt.Sprintf(sqlSelectProcessesWhere, "id", field)
+	sqlSelectProcessesWhere = fmt.Sprintf(sqlSelectProcessesWhere, "id")
 
-	rows, err := store.Query(sqlSelectProcessesWhere)
+	rows, err := store.Query(sqlSelectProcessesWhere, host.Id)
 	if err != nil {
 		return processes, err
 	}

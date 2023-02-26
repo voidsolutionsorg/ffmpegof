@@ -181,14 +181,14 @@ func sqlSelectHostsWhere(dbType string) (string, error) {
 	}
 }
 
-func (store *datastore) SelectHostsWhere(field string) (hosts []Host, err error) {
+func (store *datastore) SelectHostsWhere(fieldType string, field string) (hosts []Host, err error) {
 	sqlSelectHostsWhere, err := sqlSelectHostsWhere(store.dbType)
 	if err != nil {
 		return hosts, err
 	}
-	sqlSelectHostsWhere = fmt.Sprintf(sqlSelectHostsWhere, "*", field)
+	sqlSelectHostsWhere = fmt.Sprintf(sqlSelectHostsWhere, "*", fieldType)
 
-	rows, err := store.Query(sqlSelectHostsWhere)
+	rows, err := store.Query(sqlSelectHostsWhere, field)
 	if err != nil {
 		return hosts, err
 	}
@@ -207,14 +207,14 @@ func (store *datastore) SelectHostsWhere(field string) (hosts []Host, err error)
 	return hosts, rows.Err()
 }
 
-func (store *datastore) SelectHostsIdWhere(field string) (hosts []Host, err error) {
+func (store *datastore) SelectHostsIdWhere(fieldType string, field string) (hosts []Host, err error) {
 	sqlSelectHostsWhere, err := sqlSelectHostsWhere(store.dbType)
 	if err != nil {
 		return hosts, err
 	}
-	sqlSelectHostsWhere = fmt.Sprintf(sqlSelectHostsWhere, "id", field)
+	sqlSelectHostsWhere = fmt.Sprintf(sqlSelectHostsWhere, "id", fieldType)
 
-	rows, err := store.Query(sqlSelectHostsWhere)
+	rows, err := store.Query(sqlSelectHostsWhere, field)
 	if err != nil {
 		return hosts, err
 	}

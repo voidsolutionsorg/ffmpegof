@@ -200,14 +200,14 @@ func sqlSelectStatesWhere(dbType string) (string, error) {
 	}
 }
 
-func (store *datastore) SelectStatesWhere(field string) (states []State, err error) {
+func (store *datastore) SelectStatesWhere(host Host) (states []State, err error) {
 	sqlSelectStatesWhere, err := sqlSelectStatesWhere(store.dbType)
 	if err != nil {
 		return states, err
 	}
-	sqlSelectStatesWhere = fmt.Sprintf(sqlSelectStatesWhere, "*", field)
+	sqlSelectStatesWhere = fmt.Sprintf(sqlSelectStatesWhere, "*")
 
-	rows, err := store.Query(sqlSelectStatesWhere)
+	rows, err := store.Query(sqlSelectStatesWhere, host.Id)
 	if err != nil {
 		return states, err
 	}
@@ -226,14 +226,14 @@ func (store *datastore) SelectStatesWhere(field string) (states []State, err err
 	return states, rows.Err()
 }
 
-func (store *datastore) SelectStatesIdWhere(field string) (states []State, err error) {
+func (store *datastore) SelectStatesIdWhere(host Host) (states []State, err error) {
 	sqlSelectStatesWhere, err := sqlSelectStatesWhere(store.dbType)
 	if err != nil {
 		return states, err
 	}
-	sqlSelectStatesWhere = fmt.Sprintf(sqlSelectStatesWhere, "id", field)
+	sqlSelectStatesWhere = fmt.Sprintf(sqlSelectStatesWhere, "id")
 
-	rows, err := store.Query(sqlSelectStatesWhere)
+	rows, err := store.Query(sqlSelectStatesWhere, host.Id)
 	if err != nil {
 		return states, err
 	}
