@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"database/sql"
@@ -15,7 +13,6 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/sourcegraph/conc"
 	"gopkg.in/natefinch/lumberjack.v2"
 
 	"github.com/aleksasiriski/rffmpeg-go/migrate"
@@ -116,30 +113,11 @@ func main() {
 			Msg("Failed initialising processor:")
 	}
 
-	// display initialised banner
-	log.Info().
-		Str("Migrator", "success").
-		Str("Processor", "success").
-		Msg("Initialised")
-
 	// rffmpeg-go
-	var helper conc.WaitGroup
-	var worker conc.WaitGroup
-	helper.Go(func() {
-		for {
-			worker.Go(func() {
-				//Something(config, proc, client)
-			})
-			time.Sleep(time.Minute * 5)
-		}
-	})
-
-	// handle interrupt signal
-	quitChannel := make(chan os.Signal, 1)
-	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)
-	<-quitChannel
-	worker.Wait()
-
-	// testing
-	fmt.Println(proc)
+	cmd := os.Args[0]
+	if cmd == "rffmpeg" {
+		//runControl(config, proc)
+	} else {
+		runFfmpeg(config, proc, cmd, os.Args[1:])
+	}
 }
