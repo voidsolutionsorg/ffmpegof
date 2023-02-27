@@ -7,10 +7,6 @@ import (
 	"strings"
 	"syscall"
 
-	//"database/sql"
-	_ "github.com/lib/pq"
-	_ "modernc.org/sqlite"
-
 	"github.com/rs/zerolog/log"
 	"github.com/sourcegraph/conc"
 

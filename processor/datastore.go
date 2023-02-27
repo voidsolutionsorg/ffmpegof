@@ -43,7 +43,7 @@ func newDatastore(db *sql.DB, dbType string, mg *migrate.Migrator) (*datastore, 
 			}
 		}
 	default:
-		panic(fmt.Errorf("Incorrect database type!"))
+		return &datastore{}, fmt.Errorf("incorrect database type")
 	}
 	return &datastore{db, dbType}, nil
 }
