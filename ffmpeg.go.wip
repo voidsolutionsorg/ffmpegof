@@ -66,7 +66,7 @@ func runRemoteFfmpeg(config Config, proc *Processor, cmd string, args []string, 
 	}
 
 	stdin := os.Stdin
-    stderr := os.Stderr
+	stderr := os.Stderr
 
 	if strings.Contains(cmd, "ffprobe") {
 		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.FfprobeCommand)

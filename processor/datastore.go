@@ -47,3 +47,32 @@ func newDatastore(db *sql.DB, dbType string, mg *migrate.Migrator) (*datastore, 
 	}
 	return &datastore{db, dbType}, nil
 }
+
+func sqlSelectVersion(dbType string) (string, error) {
+	switch dbType {
+	case "sqlite":
+		return "sqlite", nil
+	case "postgres":
+		return `SELECT version()`, nil
+	default:
+		return "", fmt.Errorf("incorrect database type")
+	}
+}
+
+func (store *datastore) SelectVersion() (string, error) {
+	sqlSelectVersion, err := sqlSelectVersion(store.dbType)
+	if err != nil {
+		return "", err
+	}
+
+	version := "sqlite"
+	if store.dbType != "sqlite" {
+		row := store.QueryRow(sqlSelectVersion)
+		err = row.Scan(&version)
+		if err != nil {
+			return version, fmt.Errorf("select version: %w", err)
+		}
+	}
+
+	return version, nil
+}

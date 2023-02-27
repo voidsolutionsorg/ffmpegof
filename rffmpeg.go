@@ -113,11 +113,25 @@ func main() {
 			Msg("Failed initialising processor:")
 	}
 
+	// database connection
+	databaseVersion, err := proc.GetVersion()
+	if err != nil {
+		log.Fatal().
+			Err(err).
+			Msg("Failed getting database version:")
+	} else {
+		log.Info().
+			Msg(fmt.Sprintf("Database in use: %s", databaseVersion))
+	}
+
 	// rffmpeg-go
 	cmd := os.Args[0]
 	if cmd == "rffmpeg" {
 		//runControl(config, proc)
+		fmt.Println(cmd)
 	} else {
-		runFfmpeg(config, proc, cmd, os.Args[1:])
+		//runFfmpeg(config, proc, cmd, os.Args[1:])
+		fmt.Println(cmd)
 	}
+	fmt.Println(proc)
 }

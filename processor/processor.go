@@ -52,6 +52,11 @@ type Processor struct {
 	processed int64
 }
 
+// version
+func (p *Processor) GetVersion() (string, error) {
+	return p.store.SelectVersion()
+}
+
 // hosts
 func (p *Processor) AddHost(host Host) error {
 	return p.store.UpsertHost(host)
