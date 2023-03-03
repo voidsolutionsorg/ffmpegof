@@ -95,8 +95,8 @@ func (p *Processor) RemoveProcesses() error {
 	return p.store.DeleteProcesses()
 }
 
-func (p *Processor) RemoveProcess(process Process) error {
-	return p.store.DeleteProcess(process)
+func (p *Processor) RemoveProcessesByPid(pid int) error {
+	return p.store.DeleteProcessesWhere(pid)
 }
 
 func (p *Processor) NumberOfProcesses() (int, error) {
@@ -128,8 +128,8 @@ func (p *Processor) RemoveStates() error {
 	return p.store.DeleteStates()
 }
 
-func (p *Processor) RemoveState(state State) error {
-	return p.store.DeleteState(state)
+func (p *Processor) RemoveStatesByPid(pid int) error {
+	return p.store.DeleteStatesWhere(pid)
 }
 
 func (p *Processor) NumberOfStates() (int, error) {

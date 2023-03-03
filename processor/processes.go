@@ -66,7 +66,7 @@ func (store *datastore) DeleteProcesses() error {
 	return nil
 }
 
-func sqlDeleteProcess(dbType string) (string, error) {
+func sqlDeleteProcessesWhere(dbType string) (string, error) {
 	switch dbType {
 	case "sqlite":
 		return `DELETE FROM processes WHERE process_id=?`, nil
@@ -77,13 +77,13 @@ func sqlDeleteProcess(dbType string) (string, error) {
 	}
 }
 
-func (store *datastore) DeleteProcess(process Process) error {
-	sqlDeleteProcess, err := sqlDeleteProcess(store.dbType)
+func (store *datastore) DeleteProcessesWhere(pid int) error {
+	sqlDeleteProcessesWhere, err := sqlDeleteProcessesWhere(store.dbType)
 	if err != nil {
 		return err
 	}
 
-	_, err = store.Exec(sqlDeleteProcess, process.Id)
+	_, err = store.Exec(sqlDeleteProcessesWhere, pid)
 	if err != nil {
 		return fmt.Errorf("delete process: %w", err)
 	}
