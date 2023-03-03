@@ -2,15 +2,26 @@ package main
 
 import (
 	"fmt"
-	//"os"
+	"os"
 	//"os/signal"
-	"os/exec"
 	"io"
+	"os/exec"
 	//"strings"
 	//"syscall"
 
 	"github.com/aleksasiriski/rffmpeg-go/processor"
+	"github.com/rs/zerolog/log"
 )
+
+type HostMapping struct {
+	Id           int
+	Servername   string
+	Hostname     string
+	Weight       int
+	CurrentState string
+	MarkingPid   string
+	Commands     []int
+}
 
 // signum="", frame=""
 func cleanup(pid int, proc *processor.Processor) (error, error) {
@@ -57,6 +68,133 @@ func runCommand(commandArray []string, stdin io.Reader, stdout io.Writer, stderr
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	return cmd
+}
+
+func removeFromSlice(slice []string, elemToRemove string) []string {
+	for index, elem := range slice {
+		if elem == elemToRemove {
+			return append(slice[:index], slice[index+1:]...)
+		}
+	}
+	return slice
+}
+
+func getTargetHost(config Config, proc *processor.Processor) (processor.Host, error) {
+	targetHost := processor.Host{}
+
+	hosts, err := proc.GetHosts()
+	if err != nil {
+		return targetHost, err
+	}
+
+	hostMappings := make([]HostMapping, 0)
+
+	for _, host := range hosts {
+		states, err := proc.GetStatesFromHost(host)
+		if err != nil {
+			return targetHost, err
+		}
+
+		currentState := ""
+		markingPid := ""
+		if len(states) == 0 {
+			currentState = "idle"
+			markingPid = "N/A"
+		} else {
+			currentState = states[0].State
+			markingPid = fmt.Sprintf("%d", states[0].ProcessId)
+		}
+
+		processes, err := proc.GetProcessesFromHost(host)
+		if err != nil {
+			return targetHost, err
+		}
+
+		commands := make([]int, 0)
+		for _, process := range processes {
+			commands = append(commands, process.ProcessId)
+		}
+
+		hostMappings = append(hostMappings, HostMapping{
+			Id:           host.Id,
+			Hostname:     host.Hostname,
+			Weight:       host.Weight,
+			Servername:   host.Servername,
+			CurrentState: currentState,
+			MarkingPid:   markingPid,
+			Commands:     commands,
+		})
+	}
+
+	lowestCount := 9999
+	for _, hostMapping := range hostMappings {
+		log.Debug().
+			Msg(fmt.Sprintf("Trying host %s", hostMapping.Servername))
+
+		if hostMapping.CurrentState == "bad" {
+			log.Debug().
+				Msg(fmt.Sprintf("Host previously marked bad by PID %s", hostMapping.MarkingPid))
+			continue
+		}
+		if hostMapping.Hostname == "localhost" || hostMapping.Hostname == "127.0.0.1" {
+			log.Debug().
+				Msg("Running SSH test")
+
+			testSshCommand := generateSshCommand(config, hostMapping.Hostname)
+			testSshCommand = removeFromSlice(testSshCommand, "-q")
+			testFfmpegCommand := config.Commands.Ffmpeg + "-version"
+			testFullCommand := append(testSshCommand, testFfmpegCommand)
+			testCommand := runCommand(testFullCommand, os.Stdin, os.Stdout, os.Stderr)
+			err = testCommand.Run()
+			if err != nil {
+				// Mark the host as bad
+				log.Warn().
+					Str("command", testFfmpegCommand). // testFullCommand
+					Msg(fmt.Sprintf("Marking host %s as bad due to: %w", hostMapping.Servername, err))
+				err = proc.AddState(processor.State{
+					HostId:    hostMapping.Id,
+					ProcessId: os.Getpid(),
+					State:     "bad",
+				})
+				continue
+			}
+			log.Debug().
+				Msg("SSH test succeeded")
+		}
+
+		// If the host state is idle, we can use it immediately
+		if hostMapping.CurrentState == "idle" {
+			targetHost.Id = hostMapping.Id
+			targetHost.Servername = hostMapping.Servername
+			targetHost.Hostname = hostMapping.Hostname
+			log.Debug().
+				Msg("Selecting host as idle")
+			break
+		}
+
+		// Get the modified count of the host
+		rawProcCount := len(hostMapping.Commands)
+		weightedProcCount := rawProcCount / hostMapping.Weight
+
+		// If this host is currently the least used, provisionally set it as the target
+		if weightedProcCount < lowestCount {
+			lowestCount = weightedProcCount
+			targetHost.Id = hostMapping.Id
+			targetHost.Servername = hostMapping.Servername
+			targetHost.Hostname = hostMapping.Hostname
+			log.Debug().
+				Str("raw", fmt.Sprintf("%d", rawProcCount)).
+				Str("weighted", fmt.Sprintf("%d", weightedProcCount)).
+				Msg("Selecting host as current lowest proc count")
+		}
+	}
+
+	log.Debug().
+		Str("id", fmt.Sprintf("%d", targetHost.Id)).
+		Str("servername", targetHost.Servername).
+		Str("hostname", targetHost.Hostname).
+		Msg("Found optimal host")
+	return targetHost, err
 }
 
 /*func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args []string, target processor.Host) int {
