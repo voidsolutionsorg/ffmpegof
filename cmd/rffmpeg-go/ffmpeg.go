@@ -4,6 +4,8 @@ import (
 	"fmt"
 	//"os"
 	//"os/signal"
+	"os/exec"
+	"io"
 	//"strings"
 	//"syscall"
 
@@ -45,6 +47,16 @@ func generateSshCommand(config Config, targetHostname string) []string {
 	sshCommand = append(sshCommand, fmt.Sprintf("%s@%s", config.Remote.User, targetHostname))
 
 	return sshCommand
+}
+
+func runCommand(commandArray []string, stdin io.Reader, stdout io.Writer, stderr io.Writer) *exec.Cmd {
+	commandName := commandArray[0]
+	commandArgs := commandArray[1:]
+	cmd := exec.Command(commandName, commandArgs...)
+	cmd.Stdin = stdin
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	return cmd
 }
 
 /*func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args []string, target processor.Host) int {
