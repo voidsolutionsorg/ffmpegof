@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"os"
-	//"os/signal"
 	"io"
+	"os"
 	"os/exec"
-	//"strings"
-	//"syscall"
+	"os/signal"
+	"strings"
+	"syscall"
 
 	"github.com/aleksasiriski/rffmpeg-go/processor"
 	"github.com/rs/zerolog/log"
+	"github.com/sourcegraph/conc"
 )
 
 type HostMapping struct {
@@ -24,7 +25,8 @@ type HostMapping struct {
 }
 
 // signum="", frame=""
-func cleanup(pid int, proc *processor.Processor) (error, error) {
+func cleanup(proc *processor.Processor) (error, error) {
+	pid := os.Getpid()
 	errStates := proc.RemoveStatesByPid(pid)
 	errProcesses := proc.RemoveProcessesByPid(pid)
 	return errStates, errProcesses
@@ -197,7 +199,7 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 	return targetHost, err
 }
 
-/*func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args []string, target processor.Host) int {
+/*func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args []string, target processor.Host) error {
 	rffmpegSshCommand := generateSshCommand(config, target.Hostname)
 	rffmpegFfmpegCommand := make([]string, 0)
 
@@ -217,10 +219,10 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.FfmpegCommand)
 		stdout := os.Stderr
 	}
-}
-
+}*/
 
 func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []string) error {
+	returnChannel := make(chan error, 1)
 	var worker conc.WaitGroup
 	worker.Go(func() {
 		log.Info().
@@ -228,32 +230,57 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 
 		target, err := getTargetHost(config, proc)
 		if err != nil {
-			return err
-		}
-
-		if target.Hostname == nil || target.Hostname == "localhost" {
-			ret := runLocalFfmpeg(config, proc, cmd, args)
-		} else {
-			ret := runRemoteFfmpeg(config, proc, cmd, args, target)
-		}
-
-		cleanup()
-		if ret.returncode == 0 {
-			log.Info().
-				Str("returncode", ret.returncode).
-				Msg("Finished rffmpeg")
-		} else {
 			log.Error().
-				Str("returncode", ret.returncode).
-				Msg("Finished rffmpeg with return code ")
+				Err(err).
+				Msg("Failed getting target host:")
+		} else {
+			ret := fmt.Errorf("test")
+			if target.Hostname == "localhost" || target.Hostname == "127.0.0.1" {
+				//ret := runLocalFfmpeg(config, proc, cmd, args)
+			} else {
+				//ret := runRemoteFfmpeg(config, proc, cmd, args, target)
+			}
+
+			if ret != nil {
+				log.Error().
+					Err(ret).
+					Msg("Finished rffmpeg with error:")
+			} else {
+				log.Info().
+					Msg("Finished rffmpeg successfully")
+			}
+			returnChannel <- ret
 		}
-		exit(ret.returncode)
 	})
 
 	// handle interrupt signal
 	quitChannel := make(chan os.Signal, 1)
 	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
-	<-quitChannel
-	cleanup()
+	select {
+	case <-quitChannel:
+		{
+			log.Warn().
+				Msg("Forced quit executed")
+		}
+	case returnCode := <-returnChannel:
+		{
+			log.Info().
+				Str("code", fmt.Sprintf("%w", returnCode)).
+				Msg("Finished running command")
+		}
+	}
+
+	errStates, errProcesses := cleanup(proc)
+	if errStates != nil {
+		log.Error().
+			Err(errStates).
+			Msg("Error occured during cleanup of states:")
+	}
+	if errProcesses != nil {
+		log.Error().
+			Err(errProcesses).
+			Msg("Error occured during cleanup of processes:")
+	}
+
 	return nil
-}*/
+}

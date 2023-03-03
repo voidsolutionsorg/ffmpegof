@@ -130,8 +130,7 @@ func main() {
 		//runControl(config, proc)
 		fmt.Println(cmd)
 	} else {
-		//runFfmpeg(config, proc, cmd, os.Args[1:])
-		fmt.Println(cmd)
+		runFfmpeg(config, proc, cmd, os.Args[1:])
 	}
 	fmt.Println(proc)
 }
