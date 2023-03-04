@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 
@@ -151,7 +152,7 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 			if err != nil {
 				// Mark the host as bad
 				log.Warn().
-					Str("command", testFfmpegCommand). // testFullCommand
+					Str("command", strings.Join(testFullCommand, " ")).
 					Msg(fmt.Sprintf("Marking host %s as bad due to: %w", hostMapping.Servername, err))
 				err = proc.AddState(processor.State{
 					HostId:    hostMapping.Id,
@@ -199,27 +200,134 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 	return targetHost, err
 }
 
-/*func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args []string, target processor.Host) error {
-	rffmpegSshCommand := generateSshCommand(config, target.Hostname)
-	rffmpegFfmpegCommand := make([]string, 0)
-
-	for _, cmd := range config.PreCommands {
-		if cmd != nil {
-			rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, cmd)
+func sliceContains(slice []string, elem string) bool {
+	for _, iter := range slice {
+		if iter == elem {
+			return true
 		}
 	}
+	return false
+}
 
+func runLocalFfmpeg(config Config, proc *processor.Processor, cmd string, args []string) (error, error, error) {
+	rffmpegFfmpegCommand := make([]string, 0)
+
+	// Prepare our default stdin/stdout/stderr
 	stdin := os.Stdin
+	stdout := os.Stdout
 	stderr := os.Stderr
 
 	if strings.Contains(cmd, "ffprobe") {
-		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.FfprobeCommand)
-		stdout := os.Stdout
+		// If we're in ffprobe mode use that command and os.Stdout as stdout
+		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.Commands.Ffprobe)
 	} else {
-		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.FfmpegCommand)
-		stdout := os.Stderr
+		// Otherwise, we use stderr as stdout
+		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.Commands.Ffmpeg)
+		stdout = stderr
 	}
-}*/
+
+	// Append all the passed arguments directly
+	// Check for special flags that override the default stdout
+	foundSpecialFlag := false
+	for _, arg := range args {
+		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, arg)
+
+		if !foundSpecialFlag && sliceContains(config.Commands.SpecialFlags, arg) {
+			stdout = os.Stdout
+			foundSpecialFlag = true
+		}
+	}
+
+	log.Info().
+		Msg("Running command on localhost")
+
+	log.Debug().
+		Str("command", strings.Join(rffmpegFfmpegCommand, " ")).
+		Msg("Localhost")
+
+	fullCommand := cmd + " " + strings.Join(args, " ")
+	errProcess := proc.AddProcess(processor.Process{
+		HostId:    0,
+		ProcessId: os.Getpid(),
+		Cmd:       fullCommand,
+	})
+
+	errState := proc.AddState(processor.State{
+		HostId:    0,
+		ProcessId: os.Getpid(),
+		State:     "active",
+	})
+
+	runnableCommand := runCommand(rffmpegFfmpegCommand, stdin, stdout, stderr)
+	return runnableCommand.Run(), errProcess, errState
+}
+
+func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args []string, target processor.Host) (error, error, error) {
+	rffmpegSshCommand := generateSshCommand(config, target.Hostname)
+	rffmpegFfmpegCommand := make([]string, 0)
+
+	// Add any pre commands
+	for _, cmd := range config.Commands.Pre {
+		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, cmd)
+	}
+
+	// Prepare our default stdin/stdout/stderr
+	stdin := os.Stdin
+	stdout := os.Stdout
+	stderr := os.Stderr
+
+	if strings.Contains(cmd, "ffprobe") {
+		// If we're in ffprobe mode use that command and os.Stdout as stdout
+		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.Commands.Ffprobe)
+	} else {
+		// Otherwise, we use stderr as stdout
+		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.Commands.Ffmpeg)
+		stdout = stderr
+	}
+
+	// Append all the passed arguments with requoting of any problematic characters
+	// Check for special flags that override the default stdout
+	foundSpecialFlag := false
+	re := regexp.MustCompile(`[*'()|\[\]\s]`)
+	for _, arg := range args {
+		// Match bad shell characters: * ' ( ) | [ ] or whitespace
+		if re.Match([]byte(arg)) {
+			rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, fmt.Sprintf("\"%s\"", arg))
+		} else {
+			rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, arg)
+		}
+
+		if !foundSpecialFlag && sliceContains(config.Commands.SpecialFlags, arg) {
+			stdout = os.Stdout
+			foundSpecialFlag = true
+		}
+	}
+
+	rffmpegFullCommand := append(rffmpegSshCommand, rffmpegFfmpegCommand...)
+
+	log.Info().
+		Msg(fmt.Sprintf("Running command on host %s", target.Servername))
+
+	log.Debug().
+		Str("command", strings.Join(rffmpegFullCommand, " ")).
+		Msg("Remote")
+
+	fullCommand := cmd + " " + strings.Join(args, " ")
+	errProcess := proc.AddProcess(processor.Process{
+		HostId:    target.Id,
+		ProcessId: os.Getpid(),
+		Cmd:       fullCommand,
+	})
+
+	errState := proc.AddState(processor.State{
+		HostId:    target.Id,
+		ProcessId: os.Getpid(),
+		State:     "active",
+	})
+
+	runnableCommand := runCommand(rffmpegFullCommand, stdin, stdout, stderr)
+	return runnableCommand.Run(), errProcess, errState
+}
 
 func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []string) error {
 	returnChannel := make(chan error, 1)
@@ -234,11 +342,24 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 				Err(err).
 				Msg("Failed getting target host:")
 		} else {
-			ret := fmt.Errorf("test")
+			ret := fmt.Errorf("not yet run")
+			errProcess := fmt.Errorf("not yet run")
+			errState := fmt.Errorf("not yet run")
 			if target.Hostname == "localhost" || target.Hostname == "127.0.0.1" {
-				//ret := runLocalFfmpeg(config, proc, cmd, args)
+				ret, errProcess, errState = runLocalFfmpeg(config, proc, cmd, args)
 			} else {
-				//ret := runRemoteFfmpeg(config, proc, cmd, args, target)
+				ret, errProcess, errState = runRemoteFfmpeg(config, proc, cmd, args, target)
+			}
+
+			if errProcess != nil {
+				log.Error().
+					Err(errProcess).
+					Msg("Failed adding process:")
+			}
+			if errState != nil {
+				log.Error().
+					Err(errState).
+					Msg("Failed adding state:")
 			}
 
 			if ret != nil {
