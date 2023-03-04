@@ -26,8 +26,7 @@ type HostMapping struct {
 }
 
 // signum="", frame=""
-func cleanup(proc *processor.Processor) (error, error) {
-	pid := os.Getpid()
+func cleanup(pid int, proc *processor.Processor) (error, error) {
 	errStates := proc.RemoveStatesByPid(pid)
 	errProcesses := proc.RemoveProcessesByPid(pid)
 	return errStates, errProcesses
@@ -156,7 +155,7 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 					Msg(fmt.Sprintf("Marking host %s as bad due to: %w", hostMapping.Servername, err))
 				err = proc.AddState(processor.State{
 					HostId:    hostMapping.Id,
-					ProcessId: os.Getpid(),
+					ProcessId: config.Program.Pid,
 					State:     "bad",
 				})
 				continue
@@ -248,13 +247,13 @@ func runLocalFfmpeg(config Config, proc *processor.Processor, cmd string, args [
 	fullCommand := cmd + " " + strings.Join(args, " ")
 	errProcess := proc.AddProcess(processor.Process{
 		HostId:    0,
-		ProcessId: os.Getpid(),
+		ProcessId: config.Program.Pid,
 		Cmd:       fullCommand,
 	})
 
 	errState := proc.AddState(processor.State{
 		HostId:    0,
-		ProcessId: os.Getpid(),
+		ProcessId: config.Program.Pid,
 		State:     "active",
 	})
 
@@ -315,13 +314,13 @@ func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args 
 	fullCommand := cmd + " " + strings.Join(args, " ")
 	errProcess := proc.AddProcess(processor.Process{
 		HostId:    target.Id,
-		ProcessId: os.Getpid(),
+		ProcessId: config.Program.Pid,
 		Cmd:       fullCommand,
 	})
 
 	errState := proc.AddState(processor.State{
 		HostId:    target.Id,
-		ProcessId: os.Getpid(),
+		ProcessId: config.Program.Pid,
 		State:     "active",
 	})
 
@@ -391,7 +390,7 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 		}
 	}
 
-	errStates, errProcesses := cleanup(proc)
+	errStates, errProcesses := cleanup(config.Program.Pid, proc)
 	if errStates != nil {
 		log.Error().
 			Err(errStates).

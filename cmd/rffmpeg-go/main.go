@@ -10,7 +10,6 @@ import (
 	_ "github.com/lib/pq"
 	_ "modernc.org/sqlite"
 
-	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -19,35 +18,11 @@ import (
 	"github.com/aleksasiriski/rffmpeg-go/processor"
 )
 
-var (
-	// CLI
-	cli struct {
-		// flags
-		Config    string `type:"path" default:"${config_dir}" env:"RFFMPEG_AUTOSCALER_CONFIG" help:"Config file path"`
-		Log       string `type:"path" default:"${log_file}" env:"RFFMPEG_AUTOSCALER_LOG" help:"Log file path"`
-		Verbosity int    `type:"counter" default:"0" short:"v" env:"RFFMPEG_AUTOSCALER_VERBOSITY" help:"Log level verbosity"`
-	}
-)
-
 func main() {
-	// parse cli
-	ctx := kong.Parse(&cli,
-		kong.Name("rffmpeg"),
-		kong.Description("Remote ffmpeg"),
-		kong.UsageOnError(),
-		kong.ConfigureHelp(kong.HelpOptions{
-			Summary: true,
-			Compact: true,
-		}),
-		kong.Vars{
-			"config_dir": "/config",
-			"log_file":   "/config/log/rffmpeg.log",
-		},
-	)
-
-	if err := ctx.Validate(); err != nil {
-		fmt.Println("Failed parsing cli:", err)
-		os.Exit(1)
+	// config
+	config, err := LoadConfig()
+	if err != nil {
+		panic(fmt.Errorf("Cannot load config: %w", err))
 	}
 
 	// logger
@@ -57,7 +32,7 @@ func main() {
 	}, zerolog.ConsoleWriter{
 		TimeFormat: time.Stamp,
 		Out: &lumberjack.Logger{
-			Filename:   cli.Log,
+			Filename:   config.Program.Log,
 			MaxSize:    5,
 			MaxAge:     14,
 			MaxBackups: 5,
@@ -72,14 +47,6 @@ func main() {
 		log.Logger = logger.Level(zerolog.TraceLevel)
 	default:
 		log.Logger = logger.Level(zerolog.InfoLevel)
-	}
-
-	// config
-	config, err := LoadConfig(cli.Config)
-	if err != nil {
-		log.Fatal().
-			Err(err).
-			Msg("Cannot load config:")
 	}
 
 	// datastore
@@ -126,11 +93,10 @@ func main() {
 
 	// rffmpeg-go
 	cmd := os.Args[0]
-	if cmd == "rffmpeg" {
-		//runControl(config, proc)
-		fmt.Println(cmd)
+	args := os.Args[1:]
+	if cmd == "ffmpeg" || cmd == "ffprobe" {
+		runFfmpeg(config, proc, cmd, args)
 	} else {
-		runFfmpeg(config, proc, cmd, os.Args[1:])
+		runControl(config, proc, args)
 	}
-	fmt.Println(proc)
 }

@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+type Program struct {
+	Pid int    `mapstructure:"PID"`
+	Log string `mapstructure:"LOG"`
+}
+
 type Directories struct {
 	State   string `mapstructure:"STATE"`
 	Persist string `mapstructure:"PERSIST"`
@@ -43,26 +48,30 @@ type Database struct {
 }
 
 type Config struct {
+	Program     Program     `mapstructure:"PROGRAM"`
 	Directories Directories `mapstructure:"DIRECTORIES"`
 	Remote      Remote      `mapstructure:"REMOTE"`
 	Commands    Commands    `mapstructure:"COMMANDS"`
 	Database    Database    `mapstructure:"DATABASE"`
 }
 
-func LoadConfig(path string) (Config, error) {
+func LoadConfig() (Config, error) {
 	config := Config{
+		Program: Program{
+			Log: "/config/log/rffmpeg.log",
+		},
 		Directories: Directories{
-			State:   "/var/lib/rffmpeg",
+			State:   "/config/rffmpeg",
 			Persist: "/run/shm",
 			Owner:   "jellyfin",
-			Group:   "sudo",
+			Group:   "jellyfin",
 		},
 		Remote: Remote{
 			User:    "jellyfin",
 			Persist: 300,
 			Args: []string{
 				"-i",
-				"/var/lib/jellyfin/id_ed25519",
+				"/config/rffmpeg/ssh/id_ed25519",
 			},
 		},
 		Commands: Commands{
@@ -75,17 +84,16 @@ func LoadConfig(path string) (Config, error) {
 			SpecialFlags:    []string{},
 		},
 		Database: Database{
-			Type:        "sqlite",
-			Path:        "/config/rffmpeg/rffmpeg.db",
-			MigratorDir: "migrations/sqlite",
-			Host:        "localhost",
-			Port:        5432,
-			Name:        "rffmpeg",
-			Username:    "postgres",
+			Type:     "sqlite",
+			Path:     "/config/rffmpeg/rffmpeg.db",
+			Host:     "localhost",
+			Port:     5432,
+			Name:     "rffmpeg",
+			Username: "postgres",
 		},
 	}
 
-	viper.AddConfigPath(path)
+	viper.AddConfigPath("/etc/rffmpeg") // hardcoded for now
 	viper.SetConfigName("rffmpeg")
 	viper.SetConfigType("yaml")
 
@@ -127,6 +135,8 @@ func LoadConfig(path string) (Config, error) {
 		return config, fmt.Errorf("database type isn't supported")
 	}
 
+	config.Program.Pid = os.Getpid()
+
 	defaultSpecialFlags := []string{
 		"-version",
 		"-encoders",
@@ -137,9 +147,7 @@ func LoadConfig(path string) (Config, error) {
 		"-muxers",
 		"-fp_format",
 	}
-	for _, specialFlag := range defaultSpecialFlags {
-		config.Commands.SpecialFlags = append(config.Commands.SpecialFlags, specialFlag)
-	}
+	config.Commands.SpecialFlags = append(config.Commands.SpecialFlags, defaultSpecialFlags...)
 
 	return config, err
 }
