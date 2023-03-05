@@ -4,6 +4,9 @@
 # Copy this sample to /etc/rffmpeg/rffmpeg.yml and replace the various attributes
 # with the values for your environment. For more details please see the README.
 #
+program:
+    #log:
+    #debug:
 # Any commented value represents the default. Uncomment and alter as required.
 # Directory configuration
 directories:
@@ -59,3 +62,11 @@ commands:
     #special_flags:
     #   - "-muxers"
     #   - "-fp_format"
+database:
+    #type:
+    #path:
+    #host:
+    #port:
+    #name:
+    #username:
+    #password:

@@ -1,0 +1,28 @@
+program:
+    log:
+    debug:
+directories:
+    state:
+    persist:
+    owner:
+    group:
+remote:
+    user:
+    persist:
+    args: 
+commands:
+    ssh:
+    pre:
+    ffmpeg:
+    ffprobe:
+    fallback_ffmpeg:
+    fallback_ffprobe:
+    special_flags:
+database:
+    type:
+    path:
+    host:
+    port:
+    name:
+    username:
+    password:
