@@ -26,7 +26,7 @@ type Cli struct {
 	Status struct{} `cmd:"" help:"Status of all hosts."`
 }
 
-func addHost(config Config, proc *processor.Processor, info Add) error {
+func addHost(proc *processor.Processor, info Add) error {
 	if info.Name == "" {
 		info.Name = info.Host
 	}
@@ -41,7 +41,7 @@ func addHost(config Config, proc *processor.Processor, info Add) error {
 	return err
 }
 
-func removeHost(config Config, proc *processor.Processor, info Rm) error {
+func removeHost(proc *processor.Processor, info Rm) error {
 	err := proc.RemoveHost(processor.Host{
 		Servername: info.Name,
 	})
@@ -50,15 +50,104 @@ func removeHost(config Config, proc *processor.Processor, info Rm) error {
 }
 
 type StatusMapping struct {
-	Id           int
+	Id           string
 	Servername   string
 	Hostname     string
-	Weight       int
+	Weight       string
 	CurrentState string
 	Commands     []processor.Process
 }
 
-func status(config Config, proc *processor.Processor) error {
+func printStatus(statusMappings []StatusMapping) {
+	servernameLen := 11
+	hostnameLen := 9
+	idLen := 3
+	weightLen := 7
+	stateLen := 6
+	for _, statusMapping := range statusMappings {
+		if len(statusMapping.Servername)+1 > servernameLen {
+			servernameLen = len(statusMapping.Servername) + 1
+		}
+		if len(statusMapping.Hostname)+1 > hostnameLen {
+			hostnameLen = len(statusMapping.Hostname) + 1
+		}
+		if len(statusMapping.Id)+1 > idLen {
+			idLen = len(statusMapping.Id) + 1
+		}
+		if len(statusMapping.Weight)+1 > weightLen {
+			weightLen = len(statusMapping.Weight) + 1
+		}
+		if len(statusMapping.CurrentState)+1 > stateLen {
+			stateLen = len(statusMapping.CurrentState) + 1
+		}
+	}
+
+	output := make([]string, 0)
+	output = append(output, fmt.Sprintf("%-s%-*s %-*s %-*s %-*s %-*s %-s%-s",
+		"\033[1m",
+		servernameLen,
+		"Servername",
+		hostnameLen,
+		"Hostname",
+		idLen,
+		"ID",
+		weightLen,
+		"Weight",
+		stateLen,
+		"State",
+		"Active Commands",
+		"\033[0m",
+	))
+
+	for _, statusMapping := range statusMappings {
+		firstCommand := "N/A"
+		if len(statusMapping.Commands) > 0 {
+			firstCommand = fmt.Sprintf("PID %-d: %-s", statusMapping.Commands[0].ProcessId, statusMapping.Commands[0].Cmd)
+		}
+
+		mappingOutput := make([]string, 0)
+		mappingOutput = append(mappingOutput, fmt.Sprintf("%-*s %-*s %-*s %-*s %-*s %-s",
+			servernameLen,
+			statusMapping.Servername,
+			hostnameLen,
+			statusMapping.Hostname,
+			idLen,
+			statusMapping.Id,
+			weightLen,
+			statusMapping.Weight,
+			stateLen,
+			statusMapping.CurrentState,
+			firstCommand,
+		))
+
+		for index, command := range statusMapping.Commands {
+			if index != 0 {
+				formattedCommand := fmt.Sprintf("PID %d: %s", command.ProcessId, command.Cmd)
+				mappingOutput = append(mappingOutput, fmt.Sprintf("%-*s %-*s %-*s %-*s %-*s %-s",
+					servernameLen,
+					"",
+					hostnameLen,
+					"",
+					idLen,
+					"",
+					weightLen,
+					"",
+					stateLen,
+					"",
+					formattedCommand,
+				))
+			}
+		}
+
+		output = append(output, mappingOutput...)
+	}
+
+	for _, line := range output {
+		fmt.Printf("%s\n", line)
+	}
+}
+
+func status(proc *processor.Processor) error {
 	hosts, err := proc.GetHosts()
 	if err != nil {
 		return err
@@ -77,10 +166,10 @@ func status(config Config, proc *processor.Processor) error {
 
 	if len(fallbackProcesses) > 0 {
 		statusMappings = append(statusMappings, StatusMapping{
-			Id:           0,
+			Id:           "0",
 			Servername:   "localhost (fallback)",
 			Hostname:     "localhost (fallback)",
-			Weight:       0,
+			Weight:       "0",
 			CurrentState: "fallback",
 			Commands:     fallbackProcesses,
 		})
@@ -108,21 +197,23 @@ func status(config Config, proc *processor.Processor) error {
 
 		// Create the mappings entry
 		statusMappings = append(statusMappings, StatusMapping{
-			Id:           host.Id,
+			Id:           fmt.Sprintf("%d", host.Id),
 			Servername:   host.Servername,
 			Hostname:     host.Hostname,
-			Weight:       host.Weight,
+			Weight:       fmt.Sprintf("%d", host.Weight),
 			CurrentState: currentState,
 			Commands:     processes,
 		})
 	}
 
-	fmt.Println(statusMappings)
+	log.Info().
+		Msg("Outputting status of hosts")
+	printStatus(statusMappings)
 
 	return err
 }
 
-func runControl(config Config, proc *processor.Processor) {
+func runControl(proc *processor.Processor) {
 	// parse cli
 	cli := Cli{}
 
@@ -147,7 +238,7 @@ func runControl(config Config, proc *processor.Processor) {
 	switch ctx.Command() {
 	case "add <host>":
 		{
-			err := addHost(config, proc, cli.Add)
+			err := addHost(proc, cli.Add)
 			if err != nil {
 				log.Error().
 					Err(err).
@@ -159,7 +250,7 @@ func runControl(config Config, proc *processor.Processor) {
 		}
 	case "rm <host>":
 		{
-			err := removeHost(config, proc, cli.Rm)
+			err := removeHost(proc, cli.Rm)
 			if err != nil {
 				log.Error().
 					Err(err).
@@ -171,7 +262,7 @@ func runControl(config Config, proc *processor.Processor) {
 		}
 	case "status":
 		{
-			err := status(config, proc)
+			err := status(proc)
 			if err != nil {
 				log.Error().
 					Err(err).

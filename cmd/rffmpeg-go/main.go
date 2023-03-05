@@ -94,6 +94,6 @@ func main() {
 	if cmd == "ffmpeg" || cmd == "ffprobe" {
 		runFfmpeg(config, proc, cmd, args)
 	} else {
-		runControl(config, proc)
+		runControl(proc)
 	}
 }
