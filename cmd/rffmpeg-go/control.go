@@ -168,7 +168,7 @@ func status(proc *processor.Processor) error {
 		statusMappings = append(statusMappings, StatusMapping{
 			Id:           "0",
 			Servername:   "localhost (fallback)",
-			Hostname:     "localhost (fallback)",
+			Hostname:     "localhost",
 			Weight:       "0",
 			CurrentState: "fallback",
 			Commands:     fallbackProcesses,

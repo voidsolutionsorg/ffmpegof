@@ -82,10 +82,15 @@ func removeFromSlice(slice []string, elemToRemove string) []string {
 }
 
 func getTargetHost(config Config, proc *processor.Processor) (processor.Host, error) {
-	targetHost := processor.Host{}
+	targetHost := processor.Host{
+		Id:         0,
+		Servername: "localhost (fallback)",
+		Hostname:   "localhost",
+		Weight:     0,
+	}
 
 	hosts, err := proc.GetHosts()
-	if err != nil {
+	if err != nil || len(hosts) == 0 {
 		return targetHost, err
 	}
 
