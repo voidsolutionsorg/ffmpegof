@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"database/sql"
@@ -91,9 +92,12 @@ func main() {
 	// rffmpeg-go
 	cmd := os.Args[0]
 	args := os.Args[1:]
-	if cmd == "ffmpeg" || cmd == "ffprobe" {
+	if strings.Contains(cmd, "rffmpeg") {
+		runControl(proc)
+	} else if strings.Contains(cmd, "ffmpeg") || strings.Contains(cmd, "ffprobe") {
 		runFfmpeg(config, proc, cmd, args)
 	} else {
-		runControl(proc)
+		log.Fatal().
+			Msg("The entrypoint command must be one of three: [rffmpeg, ffmpeg, ffprobe]")
 	}
 }

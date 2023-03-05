@@ -16,3 +16,5 @@
 # config dir and binary
 config
 rffmpeg-bin
+ffmpeg
+ffprobe
