@@ -40,12 +40,9 @@ func main() {
 		NoColor: true,
 	}))
 
-	switch {
-	case cli.Verbosity == 1:
+	if config.Program.Debug {
 		log.Logger = logger.Level(zerolog.DebugLevel)
-	case cli.Verbosity > 1:
-		log.Logger = logger.Level(zerolog.TraceLevel)
-	default:
+	} else {
 		log.Logger = logger.Level(zerolog.InfoLevel)
 	}
 
@@ -97,6 +94,6 @@ func main() {
 	if cmd == "ffmpeg" || cmd == "ffprobe" {
 		runFfmpeg(config, proc, cmd, args)
 	} else {
-		runControl(config, proc, args)
+		runControl(config, proc)
 	}
 }
