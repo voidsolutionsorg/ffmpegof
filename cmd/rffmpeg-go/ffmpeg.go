@@ -387,10 +387,9 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 			log.Warn().
 				Msg("Forced quit executed")
 		}
-	case returnCode := <-returnChannel:
+	case <-returnChannel:
 		{
 			log.Info().
-				Str("code", fmt.Sprintf("%w", returnCode)).
 				Msg("Finished running command")
 		}
 	}
