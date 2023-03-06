@@ -1,15 +1,17 @@
 program:
-    log:
+    log: "/config/log/rffmpeg.log"
     debug:
 directories:
-    state:
-    persist:
-    owner:
-    group:
+    state: "/config/rffmpeg"
+    persist: "/run"
+    owner: root
+    group: root
 remote:
-    user:
+    user: root
     persist:
-    args: 
+    args:
+        - "-i"
+        - "/config/rffmpeg/.ssh/id_ed25519"
 commands:
     ssh:
     pre:
@@ -19,8 +21,8 @@ commands:
     fallback_ffprobe:
     special_flags:
 database:
-    type:
-    path:
+    type: sqlite
+    path: "/config/rffmpeg/db/rffmpeg.db"
     host:
     port:
     name:

@@ -59,11 +59,11 @@ type Config struct {
 func LoadConfig() (Config, error) {
 	config := Config{
 		Program: Program{
-			Log:   "/config/log/rffmpeg.log",
+			Log:   "/var/log/jellyfin/rffmpeg.log",
 			Debug: false,
 		},
 		Directories: Directories{
-			State:   "/config/rffmpeg",
+			State:   "/var/lib/rffmpeg",
 			Persist: "/run/shm",
 			Owner:   "jellyfin",
 			Group:   "jellyfin",
@@ -73,7 +73,7 @@ func LoadConfig() (Config, error) {
 			Persist: 300,
 			Args: []string{
 				"-i",
-				"/config/rffmpeg/.ssh/id_ed25519",
+				"/var/lib/rffmpeg/.ssh/id_ed25519",
 			},
 		},
 		Commands: Commands{
@@ -87,7 +87,7 @@ func LoadConfig() (Config, error) {
 		},
 		Database: Database{
 			Type:     "sqlite",
-			Path:     "/config/rffmpeg/db/rffmpeg.db",
+			Path:     "/var/lib/rffmpeg/db/rffmpeg.db",
 			Host:     "localhost",
 			Port:     5432,
 			Name:     "rffmpeg",
@@ -95,7 +95,7 @@ func LoadConfig() (Config, error) {
 		},
 	}
 
-	viper.AddConfigPath("/config/rffmpeg") // hardcoded for now
+	viper.AddConfigPath("/etc/rffmpeg")
 	viper.SetConfigName("rffmpeg")
 	viper.SetConfigType("yaml")
 

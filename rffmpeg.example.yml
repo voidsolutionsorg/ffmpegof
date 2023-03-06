@@ -5,8 +5,8 @@
 # with the values for your environment. For more details please see the README.
 #
 program:
-    #log:
-    #debug:
+    #log: "/var/log/jellyfin/rffmpeg.log"
+    #debug: false
 # Any commented value represents the default. Uncomment and alter as required.
 # Directory configuration
 directories:
@@ -24,7 +24,7 @@ directories:
     # The group who should own the state directory and database (an administrative group).
     # Use this group to control who is able to run "rffmpeg" management commands; users in
     # this group will have unlimited access to the tool to add/remove hosts, view status, etc.
-    #group: sudo
+    #group: jellyfin
 
 # Remote (SSH) configuration
 remote:
@@ -38,7 +38,7 @@ remote:
     # One entry line per space-separated argument element.
     #args: 
     #    - "-i"
-    #    - "/var/lib/jellyfin/id_ed25519"
+    #    - "/var/lib/rffmpeg/.ssh/id_ed25519"
 
 # Remote command configuration
 commands:
@@ -63,10 +63,10 @@ commands:
     #   - "-muxers"
     #   - "-fp_format"
 database:
-    #type:
-    #path:
-    #host:
-    #port:
-    #name:
-    #username:
-    #password:
+    #type: sqlite
+    #path: "/var/lib/rffmpeg/db/rffmpeg.db"
+    #host: localhost
+    #port: 5432
+    #name: rffmpeg
+    #username: postgres
+    #password: ""
