@@ -11,7 +11,7 @@ builds:
       - darwin
       - freebsd
       - windows
-    main: ./cmd/{{ .ProjectName }}
+    main: ./cmd/rffmpeg-go
     goarch:
       - amd64
       - arm64
