@@ -50,7 +50,7 @@ In addition to that, the easiest method to share media and transcoding dir is to
 ### Adding
 To add a target host, use the command:
 ```bash
-rffmpeg add [-w/--weight int] [-n/--name string] hostname
+rffmpeg add [-w/--weight int] [-n/--name string] <hostname/ip>
 ```
 
 This command takes the optional weight flag to adjust the weight of the target host (see below) and name fjag to set the server name (defaults to the hostname). A host can be added more than once.
