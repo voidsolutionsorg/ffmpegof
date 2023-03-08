@@ -45,6 +45,8 @@ The easiest way to setup remote transcoding hosts is to use this [docker image](
 ghcr.io/aleksasiriski/rffmpeg-worker
 ```
 
+In addition to that, the easiest method to share media and transcoding dir is to setup a [NFS share](https://github.com/aleksasiriski/jellyfin-rffmpeg/blob/main/docker-compose.example.yml).
+
 ### Adding
 To add a target host, use the command:
 ```bash
