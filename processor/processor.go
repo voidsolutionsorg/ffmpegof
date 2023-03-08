@@ -78,12 +78,12 @@ func (p *Processor) GetHosts() ([]Host, error) {
 	return p.store.SelectHosts()
 }
 
-func (p *Processor) GetHostsByField(fieldType string, field string) ([]Host, error) {
-	return p.store.SelectHostsWhere(fieldType, field)
+func (p *Processor) GetHostsByField(field string, value string) ([]Host, error) {
+	return p.store.SelectHostsWhere(field, value)
 }
 
-func (p *Processor) GetHostsIdByField(fieldType string, field string) ([]Host, error) {
-	return p.store.SelectHostsIdWhere(fieldType, field)
+func (p *Processor) GetHostsIdByField(field string, value string) ([]Host, error) {
+	return p.store.SelectHostsIdWhere(field, value)
 }
 
 // processes
@@ -95,8 +95,8 @@ func (p *Processor) RemoveProcesses() error {
 	return p.store.DeleteProcesses()
 }
 
-func (p *Processor) RemoveProcessesByPid(pid int) error {
-	return p.store.DeleteProcessesWhere(pid)
+func (p *Processor) RemoveProcessesByField(field string, process Process) error {
+	return p.store.DeleteProcessesWhere(field, process)
 }
 
 func (p *Processor) NumberOfProcesses() (int, error) {
@@ -109,6 +109,10 @@ func (p *Processor) NumberOfProcessesFromHost(host Host) (int, error) {
 
 func (p *Processor) GetProcesses() ([]Process, error) {
 	return p.store.SelectProcesses()
+}
+
+func (p *Processor) GetProcessesId() ([]Process, error) {
+	return p.store.SelectProcessesId()
 }
 
 func (p *Processor) GetProcessesFromHost(host Host) ([]Process, error) {
@@ -128,8 +132,8 @@ func (p *Processor) RemoveStates() error {
 	return p.store.DeleteStates()
 }
 
-func (p *Processor) RemoveStatesByPid(pid int) error {
-	return p.store.DeleteStatesWhere(pid)
+func (p *Processor) RemoveStatesByField(field string, state State) error {
+	return p.store.DeleteStatesWhere(field, state)
 }
 
 func (p *Processor) NumberOfStates() (int, error) {
@@ -142,6 +146,10 @@ func (p *Processor) NumberOfStatesFromHost(host Host) (int, error) {
 
 func (p *Processor) GetStates() ([]State, error) {
 	return p.store.SelectStates()
+}
+
+func (p *Processor) GetStatesId() ([]State, error) {
+	return p.store.SelectStatesId()
 }
 
 func (p *Processor) GetStatesFromHost(host Host) ([]State, error) {

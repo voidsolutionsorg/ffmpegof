@@ -69,23 +69,29 @@ func (store *datastore) DeleteProcesses() error {
 func sqlDeleteProcessesWhere(dbType string) (string, error) {
 	switch dbType {
 	case "sqlite":
-		return `DELETE FROM processes WHERE process_id=?`, nil
+		return `DELETE FROM processes WHERE %s=?`, nil
 	case "postgres":
-		return `DELETE FROM processes WHERE process_id=$1`, nil
+		return `DELETE FROM processes WHERE %s=$1`, nil
 	default:
 		return "", fmt.Errorf("incorrect database type")
 	}
 }
 
-func (store *datastore) DeleteProcessesWhere(pid int) error {
+func (store *datastore) DeleteProcessesWhere(field string, process Process) error {
 	sqlDeleteProcessesWhere, err := sqlDeleteProcessesWhere(store.dbType)
 	if err != nil {
 		return err
 	}
-
-	_, err = store.Exec(sqlDeleteProcessesWhere, pid)
+	sqlDeleteProcessesWhere = fmt.Sprintf(sqlDeleteProcessesWhere, field)
+	
+	if process.Id != 0 {
+		_, err = store.Exec(sqlDeleteProcessesWhere, process.Id)
+	} else if process.ProcessId != 0 {
+		_, err = store.Exec(sqlDeleteProcessesWhere, process.ProcessId)
+	}
+	
 	if err != nil {
-		return fmt.Errorf("delete process: %w", err)
+		return fmt.Errorf("delete processes where: %w", err)
 	}
 
 	return nil
@@ -156,9 +162,9 @@ func (store *datastore) SelectCountProcessesWhere(host Host) (int, error) {
 func sqlSelectProcesses(dbType string) (string, error) {
 	switch dbType {
 	case "sqlite":
-		return `SELECT * FROM processes`, nil
+		return `SELECT %s FROM processes`, nil
 	case "postgres":
-		return `SELECT * FROM processes`, nil
+		return `SELECT %s FROM processes`, nil
 	default:
 		return "", fmt.Errorf("incorrect database type")
 	}
@@ -169,6 +175,33 @@ func (store *datastore) SelectProcesses() (processes []Process, err error) {
 	if err != nil {
 		return processes, err
 	}
+	sqlSelectProcesses = fmt.Sprintf(sqlSelectProcesses, "*")
+
+	rows, err := store.Query(sqlSelectProcesses)
+	if err != nil {
+		return processes, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		process := Process{}
+		err = rows.Scan(&process.Id, &process.HostId, &process.ProcessId, &process.Cmd)
+		if err != nil {
+			return processes, err
+		}
+
+		processes = append(processes, process)
+	}
+
+	return processes, rows.Err()
+}
+
+func (store *datastore) SelectProcessesId() (processes []Process, err error) {
+	sqlSelectProcesses, err := sqlSelectProcesses(store.dbType)
+	if err != nil {
+		return processes, err
+	}
+	sqlSelectProcesses = fmt.Sprintf(sqlSelectProcesses, "id")
 
 	rows, err := store.Query(sqlSelectProcesses)
 	if err != nil {

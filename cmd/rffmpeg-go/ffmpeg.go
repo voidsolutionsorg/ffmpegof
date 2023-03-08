@@ -27,8 +27,8 @@ type HostMapping struct {
 
 // signum="", frame=""
 func cleanup(pid int, proc *processor.Processor) (error, error) {
-	errStates := proc.RemoveStatesByPid(pid)
-	errProcesses := proc.RemoveProcessesByPid(pid)
+	errStates := proc.RemoveStatesByField("process_id", processor.State{ProcessId: pid})
+	errProcesses := proc.RemoveProcessesByField("process_id", processor.Process{ProcessId: pid})
 	return errStates, errProcesses
 }
 

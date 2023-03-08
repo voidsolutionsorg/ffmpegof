@@ -69,21 +69,27 @@ func (store *datastore) DeleteStates() error {
 func sqlDeleteStatesWhere(dbType string) (string, error) {
 	switch dbType {
 	case "sqlite":
-		return `DELETE FROM states WHERE process_id=?`, nil
+		return `DELETE FROM states WHERE %s=?`, nil
 	case "postgres":
-		return `DELETE FROM states WHERE process_id=$1`, nil
+		return `DELETE FROM states WHERE %s=$1`, nil
 	default:
 		return "", fmt.Errorf("incorrect database type")
 	}
 }
 
-func (store *datastore) DeleteStatesWhere(pid int) error {
+func (store *datastore) DeleteStatesWhere(field string, state State) error {
 	sqlDeleteStatesWhere, err := sqlDeleteStatesWhere(store.dbType)
 	if err != nil {
 		return err
 	}
+	sqlDeleteStatesWhere = fmt.Sprintf(sqlDeleteStatesWhere, field)
 
-	_, err = store.Exec(sqlDeleteStatesWhere, pid)
+	if state.Id != 0 {
+		_, err = store.Exec(sqlDeleteStatesWhere, state.Id)
+	} else if state.ProcessId != 0 {
+		_, err = store.Exec(sqlDeleteStatesWhere, state.ProcessId)
+	}
+
 	if err != nil {
 		return fmt.Errorf("delete state: %w", err)
 	}
@@ -156,9 +162,9 @@ func (store *datastore) SelectCountStatesWhere(host Host) (int, error) {
 func sqlSelectStates(dbType string) (string, error) {
 	switch dbType {
 	case "sqlite":
-		return `SELECT * FROM states`, nil
+		return `SELECT %s FROM states`, nil
 	case "postgres":
-		return `SELECT * FROM states`, nil
+		return `SELECT %s FROM states`, nil
 	default:
 		return "", fmt.Errorf("incorrect database type")
 	}
@@ -169,6 +175,33 @@ func (store *datastore) SelectStates() (states []State, err error) {
 	if err != nil {
 		return states, err
 	}
+	sqlSelectStates = fmt.Sprintf(sqlSelectStates, "*")
+
+	rows, err := store.Query(sqlSelectStates)
+	if err != nil {
+		return states, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		state := State{}
+		err = rows.Scan(&state.Id, &state.HostId, &state.ProcessId, &state.State)
+		if err != nil {
+			return states, err
+		}
+
+		states = append(states, state)
+	}
+
+	return states, rows.Err()
+}
+
+func (store *datastore) SelectStatesId() (states []State, err error) {
+	sqlSelectStates, err := sqlSelectStates(store.dbType)
+	if err != nil {
+		return states, err
+	}
+	sqlSelectStates = fmt.Sprintf(sqlSelectStates, "id")
 
 	rows, err := store.Query(sqlSelectStates)
 	if err != nil {

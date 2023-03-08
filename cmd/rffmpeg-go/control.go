@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/aleksasiriski/rffmpeg-go/processor"
 	"github.com/rs/zerolog/log"
+	"github.com/sourcegraph/conc"
 )
 
 type Add struct {
@@ -17,13 +19,20 @@ type Add struct {
 }
 
 type Rm struct {
-	Name string `arg:"" name:"host" help:"Name of the server." required:""`
+	Id   string `help:"Id of the server." short:"i" optional:""`
+	Name string `help:"Name of the server." short:"n" optional:""`
+}
+
+type Clear struct {
+	Id   string `help:"Id of the server." short:"i" optional:""`
+	Name string `help:"Name of the server." short:"n" optional:""`
 }
 
 type Cli struct {
 	Add    Add      `cmd:"" help:"Add host."`
 	Rm     Rm       `cmd:"" help:"Remove host."`
 	Status struct{} `cmd:"" help:"Status of all hosts."`
+	Clear  Clear    `cmd:"" help:"Clear processes and states."`
 }
 
 func addHost(proc *processor.Processor, info Add) error {
@@ -42,11 +51,23 @@ func addHost(proc *processor.Processor, info Add) error {
 }
 
 func removeHost(proc *processor.Processor, info Rm) error {
-	err := proc.RemoveHost(processor.Host{
-		Servername: info.Name,
-	})
+	if info.Id != "" {
+		id, err := strconv.Atoi(info.Id)
+		if err != nil {
+			return err
+		}
+		return proc.RemoveHost(processor.Host{
+			Id: id,
+		})
+	} else if info.Name != "" {
+		return proc.RemoveHost(processor.Host{
+			Servername: info.Name,
+		})
+	} else {
+		return fmt.Errorf("id or servername must be specified")
+	}
 
-	return err
+	return nil
 }
 
 type StatusMapping struct {
@@ -213,6 +234,65 @@ func status(proc *processor.Processor) error {
 	return err
 }
 
+func clear(proc *processor.Processor, info Clear) (error, error) {
+	processesId := make([]processor.Process, 0)
+	statesId := make([]processor.State, 0)
+	errProcess := fmt.Errorf("not yet used")
+	errState := fmt.Errorf("not yet used")
+
+	if info.Id != "" {
+		id, err := strconv.Atoi(info.Id)
+		if err != nil {
+			return errProcess, errState
+		}
+		processesId, errProcess = proc.GetProcessesIdFromHost(processor.Host{
+			Id: id,
+		})
+		statesId, errState = proc.GetStatesIdFromHost(processor.Host{
+			Id: id,
+		})
+	} else if info.Name != "" {
+		processesId, errProcess = proc.GetProcessesIdFromHost(processor.Host{
+			Servername: info.Name,
+		})
+		statesId, errState = proc.GetStatesIdFromHost(processor.Host{
+			Servername: info.Name,
+		})
+	} else {
+		processesId, errProcess = proc.GetProcessesId()
+		statesId, errState = proc.GetStatesId()
+	}
+
+	if errProcess != nil || errState != nil {
+		return errProcess, errState
+	}
+
+	var worker conc.WaitGroup
+	worker.Go(func() {
+		for _, processId := range processesId {
+			err := proc.RemoveProcessesByField("id", processId)
+			if err != nil {
+				log.Error().
+					Err(err).
+					Msg("Failed removing processes:")
+			}
+		}
+	})
+	worker.Go(func() {
+		for _, stateId := range statesId {
+			err := proc.RemoveStatesByField("id", stateId)
+			if err != nil {
+				log.Error().
+					Err(err).
+					Msg("Failed removing states:")
+			}
+		}
+	})
+	worker.Wait()
+
+	return nil, nil
+}
+
 func runControl(proc *processor.Processor) {
 	// parse cli
 	cli := Cli{}
@@ -267,6 +347,22 @@ func runControl(proc *processor.Processor) {
 				log.Error().
 					Err(err).
 					Msg("Failed reading status:")
+			}
+		}
+	case "clear":
+		{
+			errProcess, errState := clear(proc, cli.Clear)
+			if errProcess != nil {
+				log.Error().
+					Err(errProcess).
+					Msg("Failed clearing processes:")
+			} else if errState != nil {
+				log.Error().
+					Err(errState).
+					Msg("Failed clearing states:")
+			} else {
+				log.Info().
+					Msg("Succesfully cleared processes and states")
 			}
 		}
 	default:
