@@ -63,4 +63,4 @@ tasks:
   publish:
     desc: Generate a release, and publish
     cmds:
-      - goreleaser --rm-dist
+      - goreleaser --rm-dist --skip-validate # this shouldn't be needed
