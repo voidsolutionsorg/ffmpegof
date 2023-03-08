@@ -38,6 +38,13 @@ For remote hosts to be able to transcode files sent by `rffmpeg-go` it is requir
 
 For example, if using Jellyfin: remote hosts need access to Jellyfin's media files as well as the temporary `transcodes` directory, and both the media files must be mounted to exactly the same location as they are on the local host.
 
+### Setup
+
+The easiest way to setup remote transcoding hosts is to use this [docker image](https://github.com/aleksasiriski/rffmpeg-worker):
+```bash
+ghcr.io/aleksasiriski/rffmpeg-worker
+```
+
 ### Adding
 To add a target host, use the command:
 ```bash
