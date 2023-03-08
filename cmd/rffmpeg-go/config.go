@@ -141,19 +141,23 @@ func LoadConfig() (Config, error) {
 	config.Program.Pid = os.Getpid()
 
 	year, month, day := time.Now().Date()
-	datetime := fmt.Sprintf("/log_rffmpeg_%d%d%d.log", year, month, day)
+	datetime := fmt.Sprintf("%d%d%d", year, month, day)
 	if month < 10 {
 		if day < 10 {
-			datetime = fmt.Sprintf("log_rffmpeg_%d0%d0%d", year, month, day)
+			datetime = fmt.Sprintf("%d0%d0%d", year, month, day)
 		} else {
-			datetime = fmt.Sprintf("log_rffmpeg_%d0%d%d", year, month, day)
+			datetime = fmt.Sprintf("%d0%d%d", year, month, day)
 		}
 	} else {
 		if day < 10 {
-			datetime = fmt.Sprintf("log_rffmpeg_%d%d0%d", year, month, day)
+			datetime = fmt.Sprintf("%d%d0%d", year, month, day)
 		}
 	}
-	config.Program.Log = config.Program.Log + datetime
+	if config.Program.Log[len(config.Program.Log)-1] == '/' {
+		config.Program.Log = config.Program.Log + "log_rffmpeg_" + datetime + ".log"
+	} else {
+		config.Program.Log = config.Program.Log + "/log_rffmpeg_" + datetime + ".log"
+	}
 
 	defaultSpecialFlags := []string{
 		"-version",
