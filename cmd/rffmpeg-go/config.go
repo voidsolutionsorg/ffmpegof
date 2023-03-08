@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type Program struct {
@@ -59,7 +60,7 @@ type Config struct {
 func LoadConfig() (Config, error) {
 	config := Config{
 		Program: Program{
-			Log:   "/var/log/jellyfin/rffmpeg.log",
+			Log:   "/var/log/jellyfin",
 			Debug: false,
 		},
 		Directories: Directories{
@@ -138,6 +139,21 @@ func LoadConfig() (Config, error) {
 	}
 
 	config.Program.Pid = os.Getpid()
+
+	year, month, day := time.Now().Date()
+	datetime := fmt.Sprintf("/log_rffmpeg_%d%d%d.log", year, month, day)
+	if month < 10 {
+		if day < 10 {
+			datetime = fmt.Sprintf("log_rffmpeg_%d0%d0%d", year, month, day)
+		} else {
+			datetime = fmt.Sprintf("log_rffmpeg_%d0%d%d", year, month, day)
+		}
+	} else {
+		if day < 10 {
+			datetime = fmt.Sprintf("log_rffmpeg_%d%d0%d", year, month, day)
+		}
+	}
+	config.Program.Log = config.Program.Log + datetime
 
 	defaultSpecialFlags := []string{
 		"-version",
