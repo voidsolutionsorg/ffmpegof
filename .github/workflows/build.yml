@@ -55,7 +55,7 @@ jobs:
       
       # dependencies
       - name: goreleaser
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v4
         with:
           install-only: true
           version: 1.7.0
