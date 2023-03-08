@@ -4,13 +4,19 @@
 # Copy this sample to /etc/rffmpeg/rffmpeg.yml and replace the various attributes
 # with the values for your environment. For more details please see the README.
 #
-program:
-    #log: "/var/log/jellyfin/rffmpeg.log"
-    #debug: false
 # Any commented value represents the default. Uncomment and alter as required.
+
+# Program configuration
+program:
+    # Log file path, without the file name
+    #log: "/var/log/jellyfin"
+
+    # Set this to true to enable more useful logs
+    #debug: false
+
 # Directory configuration
 directories:
-    # Persistent directory to store state database.
+    # Persistent directory to store stateful data.
     #state: "/var/lib/rffmpeg"
 
     # Temporary directory to store SSH persistence sockets.
@@ -62,11 +68,26 @@ commands:
     #special_flags:
     #   - "-muxers"
     #   - "-fp_format"
+
+# Database configuration
 database:
+    # Can be 'sqlite' or 'postgres'
     #type: sqlite
+
+    # Path to SQLite database, ignored when type is Postgres
     #path: "/var/lib/rffmpeg/db/rffmpeg.db"
+
+    # Host for Postgres connection
     #host: localhost
+
+    # Port for Postgres connection
     #port: 5432
+
+    # Name of the database for Postgres connection
     #name: rffmpeg
+
+    # Username for Postgres connection
     #username: postgres
+
+    # Password for Postgres connection
     #password: ""
