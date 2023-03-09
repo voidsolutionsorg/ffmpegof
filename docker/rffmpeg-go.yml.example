@@ -1,5 +1,5 @@
 program:
-    log: "/config/log/rffmpeg.log"
+    log: "/config/log"
     debug:
 directories:
     state: "/config/rffmpeg"
@@ -22,7 +22,7 @@ commands:
     special_flags:
 database:
     type: sqlite
-    path: "/config/rffmpeg/db/rffmpeg.db"
+    path: "/config/rffmpeg/db"
     host:
     port:
     name:

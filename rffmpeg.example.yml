@@ -16,9 +16,6 @@ program:
 
 # Directory configuration
 directories:
-    # Persistent directory to store stateful data.
-    #state: "/var/lib/rffmpeg"
-
     # Temporary directory to store SSH persistence sockets.
     #persist: "/run/shm"
 
@@ -74,8 +71,8 @@ database:
     # Can be 'sqlite' or 'postgres'
     #type: sqlite
 
-    # Path to SQLite database, ignored when type is Postgres
-    #path: "/var/lib/rffmpeg/db/rffmpeg.db"
+    # Path to SQLite database, without the file name
+    #path: "/var/lib/rffmpeg/db"
 
     # Host for Postgres connection
     #host: localhost

@@ -64,7 +64,6 @@ func LoadConfig() (Config, error) {
 			Debug: false,
 		},
 		Directories: Directories{
-			State:   "/var/lib/rffmpeg",
 			Persist: "/run/shm",
 			Owner:   "jellyfin",
 			Group:   "jellyfin",
@@ -88,7 +87,7 @@ func LoadConfig() (Config, error) {
 		},
 		Database: Database{
 			Type:     "sqlite",
-			Path:     "/var/lib/rffmpeg/db/rffmpeg.db",
+			Path:     "/var/lib/rffmpeg/db",
 			Host:     "localhost",
 			Port:     5432,
 			Name:     "rffmpeg",
@@ -157,6 +156,12 @@ func LoadConfig() (Config, error) {
 		config.Program.Log = config.Program.Log + "log_rffmpeg_" + datetime + ".log"
 	} else {
 		config.Program.Log = config.Program.Log + "/log_rffmpeg_" + datetime + ".log"
+	}
+
+	if config.Database.Path[len(config.Database.Path)-1] == '/' {
+		config.Database.Path = config.Database.Path + "rffmpeg.db"
+	} else {
+		config.Database.Path = config.Database.Path + "/rffmpeg.db"
 	}
 
 	defaultSpecialFlags := []string{
