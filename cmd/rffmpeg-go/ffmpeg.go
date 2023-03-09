@@ -27,9 +27,17 @@ type HostMapping struct {
 
 // signum="", frame=""
 func cleanup(pid int, proc *processor.Processor) (error, error) {
-	errStates := proc.RemoveStatesByField("process_id", processor.State{ProcessId: pid})
-	errProcesses := proc.RemoveProcessesByField("process_id", processor.Process{ProcessId: pid})
-	return errStates, errProcesses
+	errStates := make(chan error, 1)
+	errProcesses := make(chan error, 1)
+	var worker conc.WaitGroup
+	worker.Go(func() {
+		errStates <- proc.RemoveStatesByField("process_id", processor.State{ProcessId: pid})
+	})
+	worker.Go(func() {
+		errProcesses <- proc.RemoveProcessesByField("process_id", processor.Process{ProcessId: pid})
+	})
+	worker.Wait()
+	return <-errStates, <-errProcesses
 }
 
 func generateSshCommand(config Config, targetHostname string) []string {
@@ -81,6 +89,38 @@ func removeFromSlice(slice []string, elemToRemove string) []string {
 	return slice
 }
 
+func getStateAndPid(proc *processor.Processor, host processor.Host) (string, string, error) {
+	currentState := "idle"
+	markingPid := "N/A"
+
+	states, err := proc.GetStatesFromHost(host)
+	if err != nil {
+		return currentState, markingPid, err
+	}
+
+	if len(states) != 0 {
+		currentState = states[0].State
+		markingPid = fmt.Sprintf("%d", states[0].ProcessId)
+	}
+
+	return currentState, markingPid, nil
+}
+
+func getCommands(proc *processor.Processor, host processor.Host) ([]int, error) {
+	commands := make([]int, 0)
+
+	processes, err := proc.GetProcessesFromHost(host)
+	if err != nil {
+		return commands, err
+	}
+
+	for _, process := range processes {
+		commands = append(commands, process.ProcessId)
+	}
+
+	return commands, nil
+}
+
 func getTargetHost(config Config, proc *processor.Processor) (processor.Host, error) {
 	targetHost := processor.Host{
 		Id:         0,
@@ -97,29 +137,29 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 	hostMappings := make([]HostMapping, 0)
 
 	for _, host := range hosts {
-		states, err := proc.GetStatesFromHost(host)
-		if err != nil {
+		var worker conc.WaitGroup
+
+		currentStateC := make(chan string, 1)
+		markingPidC := make(chan string, 1)
+		errStateAndPidC := make(chan error, 1)
+		worker.Go(func() {
+			currentState, markingPid, errStateAndPid := getStateAndPid(proc, host)
+			currentStateC <- currentState
+			markingPidC <- markingPid
+			errStateAndPidC <- errStateAndPid
+		})
+
+		commandsC := make(chan []int, 1)
+		errCommandsC := make(chan error, 1)
+		worker.Go(func() {
+			commands, errCommands := getCommands(proc, host)
+			commandsC <- commands
+			errCommandsC <- errCommands
+		})
+
+		worker.Wait()
+		if <-errStateAndPidC != nil || <-errCommandsC != nil {
 			return targetHost, err
-		}
-
-		currentState := ""
-		markingPid := ""
-		if len(states) == 0 {
-			currentState = "idle"
-			markingPid = "N/A"
-		} else {
-			currentState = states[0].State
-			markingPid = fmt.Sprintf("%d", states[0].ProcessId)
-		}
-
-		processes, err := proc.GetProcessesFromHost(host)
-		if err != nil {
-			return targetHost, err
-		}
-
-		commands := make([]int, 0)
-		for _, process := range processes {
-			commands = append(commands, process.ProcessId)
 		}
 
 		hostMappings = append(hostMappings, HostMapping{
@@ -127,9 +167,9 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 			Hostname:     host.Hostname,
 			Weight:       host.Weight,
 			Servername:   host.Servername,
-			CurrentState: currentState,
-			MarkingPid:   markingPid,
-			Commands:     commands,
+			CurrentState: <-currentStateC,
+			MarkingPid:   <-markingPidC,
+			Commands:     <-commandsC,
 		})
 	}
 
@@ -143,6 +183,7 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 				Msg(fmt.Sprintf("Host previously marked bad by PID %s", hostMapping.MarkingPid))
 			continue
 		}
+
 		if hostMapping.Hostname == "localhost" || hostMapping.Hostname == "127.0.0.1" {
 			log.Debug().
 				Msg("Running SSH test")
@@ -231,14 +272,13 @@ func runLocalFfmpeg(config Config, proc *processor.Processor, cmd string, args [
 	}
 
 	// Append all the passed arguments directly
-	// Check for special flags that override the default stdout
-	foundSpecialFlag := false
-	for _, arg := range args {
-		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, arg)
+	rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, args...)
 
-		if !foundSpecialFlag && sliceContains(config.Commands.SpecialFlags, arg) {
+	// Check for special flags that override the default stdout
+	for _, arg := range args {
+		if sliceContains(config.Commands.SpecialFlags, arg) {
 			stdout = os.Stdout
-			foundSpecialFlag = true
+			break
 		}
 	}
 
@@ -249,21 +289,30 @@ func runLocalFfmpeg(config Config, proc *processor.Processor, cmd string, args [
 		Str("command", strings.Join(rffmpegFfmpegCommand, " ")).
 		Msg("Localhost")
 
+	var worker conc.WaitGroup
+
+	errProcessC := make(chan error, 1)
 	fullCommand := cmd + " " + strings.Join(args, " ")
-	errProcess := proc.AddProcess(processor.Process{
-		HostId:    0,
-		ProcessId: config.Program.Pid,
-		Cmd:       fullCommand,
+	worker.Go(func() {
+		errProcessC <- proc.AddProcess(processor.Process{
+			HostId:    0,
+			ProcessId: config.Program.Pid,
+			Cmd:       fullCommand,
+		})
 	})
 
-	errState := proc.AddState(processor.State{
-		HostId:    0,
-		ProcessId: config.Program.Pid,
-		State:     "active",
+	errStateC := make(chan error, 1)
+	worker.Go(func() {
+		errStateC <- proc.AddState(processor.State{
+			HostId:    0,
+			ProcessId: config.Program.Pid,
+			State:     "active",
+		})
 	})
 
+	worker.Wait()
 	runnableCommand := runCommand(rffmpegFfmpegCommand, stdin, stdout, stderr)
-	return runnableCommand.Run(), errProcess, errState
+	return runnableCommand.Run(), <-errProcessC, <-errStateC
 }
 
 func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args []string, target processor.Host) (error, error, error) {
@@ -271,9 +320,7 @@ func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args 
 	rffmpegFfmpegCommand := make([]string, 0)
 
 	// Add any pre commands
-	for _, cmd := range config.Commands.Pre {
-		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, cmd)
-	}
+	rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.Commands.Pre...)
 
 	// Prepare our default stdin/stdout/stderr
 	stdin := os.Stdin
@@ -316,21 +363,30 @@ func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args 
 		Str("command", strings.Join(rffmpegFullCommand, " ")).
 		Msg("Remote")
 
+	var worker conc.WaitGroup
+
+	errProcessC := make(chan error, 1)
 	fullCommand := cmd + " " + strings.Join(args, " ")
-	errProcess := proc.AddProcess(processor.Process{
-		HostId:    target.Id,
-		ProcessId: config.Program.Pid,
-		Cmd:       fullCommand,
+	worker.Go(func() {
+		errProcessC <- proc.AddProcess(processor.Process{
+			HostId:    target.Id,
+			ProcessId: config.Program.Pid,
+			Cmd:       fullCommand,
+		})
 	})
 
-	errState := proc.AddState(processor.State{
-		HostId:    target.Id,
-		ProcessId: config.Program.Pid,
-		State:     "active",
+	errStateC := make(chan error, 1)
+	worker.Go(func() {
+		errStateC <- proc.AddState(processor.State{
+			HostId:    target.Id,
+			ProcessId: config.Program.Pid,
+			State:     "active",
+		})
 	})
 
+	worker.Wait()
 	runnableCommand := runCommand(rffmpegFullCommand, stdin, stdout, stderr)
-	return runnableCommand.Run(), errProcess, errState
+	return runnableCommand.Run(), <-errProcessC, <-errStateC
 }
 
 func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []string) error {

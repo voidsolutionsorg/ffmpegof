@@ -103,8 +103,7 @@ func printStatus(statusMappings []StatusMapping) {
 		}
 	}
 
-	output := make([]string, 0)
-	output = append(output, fmt.Sprintf("%-s%-*s %-*s %-*s %-*s %-*s %-s%-s",
+	fmt.Printf("%-s%-*s %-*s %-*s %-*s %-*s %-s%-s\n",
 		"\033[1m",
 		servernameLen,
 		"Servername",
@@ -118,7 +117,7 @@ func printStatus(statusMappings []StatusMapping) {
 		"State",
 		"Active Commands",
 		"\033[0m",
-	))
+	)
 
 	for _, statusMapping := range statusMappings {
 		firstCommand := "N/A"
@@ -126,8 +125,7 @@ func printStatus(statusMappings []StatusMapping) {
 			firstCommand = fmt.Sprintf("PID %-d: %-s", statusMapping.Commands[0].ProcessId, statusMapping.Commands[0].Cmd)
 		}
 
-		mappingOutput := make([]string, 0)
-		mappingOutput = append(mappingOutput, fmt.Sprintf("%-*s %-*s %-*s %-*s %-*s %-s",
+		fmt.Printf("%-*s %-*s %-*s %-*s %-*s %-s\n",
 			servernameLen,
 			statusMapping.Servername,
 			hostnameLen,
@@ -139,32 +137,28 @@ func printStatus(statusMappings []StatusMapping) {
 			stateLen,
 			statusMapping.CurrentState,
 			firstCommand,
-		))
+		)
 
-		for index, command := range statusMapping.Commands {
-			if index != 0 {
-				formattedCommand := fmt.Sprintf("PID %d: %s", command.ProcessId, command.Cmd)
-				mappingOutput = append(mappingOutput, fmt.Sprintf("%-*s %-*s %-*s %-*s %-*s %-s",
-					servernameLen,
-					"",
-					hostnameLen,
-					"",
-					idLen,
-					"",
-					weightLen,
-					"",
-					stateLen,
-					"",
-					formattedCommand,
-				))
+		if firstCommand != "N/A" {
+			for index, command := range statusMapping.Commands {
+				if index != 0 {
+					formattedCommand := fmt.Sprintf("PID %d: %s", command.ProcessId, command.Cmd)
+					fmt.Printf("%-*s %-*s %-*s %-*s %-*s %-s\n",
+						servernameLen,
+						"",
+						hostnameLen,
+						"",
+						idLen,
+						"",
+						weightLen,
+						"",
+						stateLen,
+						"",
+						formattedCommand,
+					)
+				}
 			}
 		}
-
-		output = append(output, mappingOutput...)
-	}
-
-	for _, line := range output {
-		fmt.Printf("%s\n", line)
 	}
 }
 

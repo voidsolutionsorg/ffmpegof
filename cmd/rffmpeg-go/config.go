@@ -16,7 +16,6 @@ type Program struct {
 }
 
 type Directories struct {
-	State   string `mapstructure:"STATE"`
 	Persist string `mapstructure:"PERSIST"`
 	Owner   string `mapstructure:"OWNER"`
 	Group   string `mapstructure:"GROUP"`
