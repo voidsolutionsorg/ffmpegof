@@ -113,29 +113,6 @@ func LoadConfig() (Config, error) {
 		return config, fmt.Errorf("failed unmarshaling config: %w", err)
 	}
 
-	switch config.Database.Type {
-	case "sqlite":
-		{
-			err := os.MkdirAll(filepath.Dir(config.Database.Path), os.ModePerm)
-			if err != nil {
-				return config, fmt.Errorf("failed creating database directory: %w", err)
-			}
-			dbpath, err := filepath.Abs(config.Database.Path)
-			if err != nil {
-				return config, fmt.Errorf("failed loading sqlite file: %w", err)
-			}
-			config.Database.Path = dbpath + "?_foreign_keys=on"
-			config.Database.MigratorDir = "migrations/sqlite"
-		}
-	case "postgres":
-		{
-			config.Database.Path = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.Database.Host, config.Database.Port, config.Database.Username, config.Database.Password, config.Database.Name)
-			config.Database.MigratorDir = "migrations/postgres"
-		}
-	default:
-		return config, fmt.Errorf("database type isn't supported")
-	}
-
 	config.Program.Pid = os.Getpid()
 
 	year, month, day := time.Now().Date()
@@ -161,6 +138,29 @@ func LoadConfig() (Config, error) {
 		config.Database.Path = config.Database.Path + "rffmpeg.db"
 	} else {
 		config.Database.Path = config.Database.Path + "/rffmpeg.db"
+	}
+
+	switch config.Database.Type {
+	case "sqlite":
+		{
+			err := os.MkdirAll(filepath.Dir(config.Database.Path), os.ModePerm)
+			if err != nil {
+				return config, fmt.Errorf("failed creating database directory: %w", err)
+			}
+			dbpath, err := filepath.Abs(config.Database.Path)
+			if err != nil {
+				return config, fmt.Errorf("failed loading sqlite file: %w", err)
+			}
+			config.Database.Path = dbpath + "?_foreign_keys=on"
+			config.Database.MigratorDir = "migrations/sqlite"
+		}
+	case "postgres":
+		{
+			config.Database.Path = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.Database.Host, config.Database.Port, config.Database.Username, config.Database.Password, config.Database.Name)
+			config.Database.MigratorDir = "migrations/postgres"
+		}
+	default:
+		return config, fmt.Errorf("database type isn't supported")
 	}
 
 	defaultSpecialFlags := []string{
