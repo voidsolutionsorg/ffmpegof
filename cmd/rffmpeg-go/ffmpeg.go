@@ -158,7 +158,12 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 		})
 
 		worker.Wait()
-		if <-errStateAndPidC != nil || <-errCommandsC != nil {
+		err = <-errStateAndPidC
+		if err != nil {
+			return targetHost, err
+		}
+		err = <-errCommandsC
+		if err != nil {
 			return targetHost, err
 		}
 
