@@ -36,7 +36,6 @@ func cleanup(pid int, proc *processor.Processor) (error, error) {
 	worker.Go(func() {
 		errProcesses <- proc.RemoveProcessesByField("process_id", processor.Process{ProcessId: pid})
 	})
-	worker.Wait()
 	return <-errStates, <-errProcesses
 }
 
@@ -121,6 +120,74 @@ func getCommands(proc *processor.Processor, host processor.Host) ([]int, error) 
 	return commands, nil
 }
 
+func getHostMapping(proc *processor.Processor, host processor.Host) (HostMapping, error) {
+	hostMapping := HostMapping{}
+	var worker conc.WaitGroup
+
+	currentStateC := make(chan string, 1)
+	markingPidC := make(chan string, 1)
+	errStateAndPidC := make(chan error, 1)
+	worker.Go(func() {
+		currentState, markingPid, errStateAndPid := getStateAndPid(proc, host)
+		currentStateC <- currentState
+		markingPidC <- markingPid
+		errStateAndPidC <- errStateAndPid
+	})
+
+	commandsC := make(chan []int, 1)
+	errCommandsC := make(chan error, 1)
+	worker.Go(func() {
+		commands, errCommands := getCommands(proc, host)
+		commandsC <- commands
+		errCommandsC <- errCommands
+	})
+
+	err := <-errStateAndPidC
+	if err != nil {
+		return hostMapping, err
+	}
+	err = <-errCommandsC
+	if err != nil {
+		return hostMapping, err
+	}
+
+	hostMapping = HostMapping{
+		Id:           host.Id,
+		Hostname:     host.Hostname,
+		Weight:       host.Weight,
+		Servername:   host.Servername,
+		CurrentState: <-currentStateC,
+		MarkingPid:   <-markingPidC,
+		Commands:     <-commandsC,
+	}
+	return hostMapping, nil
+}
+
+func getHostMappings(proc *processor.Processor, hosts []processor.Host) ([]HostMapping, error) {
+	hostMappingC := make(chan HostMapping, len(hosts))
+	var worker conc.WaitGroup
+
+	for _, host := range hosts {
+		worker.Go(func() {
+			hostMapping, err := getHostMapping(proc, host)
+			if err != nil {
+				log.Error().
+					Err(err).
+					Msg(fmt.Sprintf("Failed to make host mapping for %s", host.Servername))
+			} else {
+				hostMappingC <- hostMapping
+			}
+		})
+	}
+
+	hostMappings := make([]HostMapping, 0)
+	for i := 0; i < len(hosts); i++ {
+		hostMappings = append(hostMappings, <-hostMappingC)
+	}
+
+	return hostMappings, nil
+}
+
 func getTargetHost(config Config, proc *processor.Processor) (processor.Host, error) {
 	targetHost := processor.Host{
 		Id:         0,
@@ -134,48 +201,9 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 		return targetHost, err
 	}
 
-	hostMappings := make([]HostMapping, 0)
-
-	for _, host := range hosts {
-		var worker conc.WaitGroup
-
-		currentStateC := make(chan string, 1)
-		markingPidC := make(chan string, 1)
-		errStateAndPidC := make(chan error, 1)
-		worker.Go(func() {
-			currentState, markingPid, errStateAndPid := getStateAndPid(proc, host)
-			currentStateC <- currentState
-			markingPidC <- markingPid
-			errStateAndPidC <- errStateAndPid
-		})
-
-		commandsC := make(chan []int, 1)
-		errCommandsC := make(chan error, 1)
-		worker.Go(func() {
-			commands, errCommands := getCommands(proc, host)
-			commandsC <- commands
-			errCommandsC <- errCommands
-		})
-
-		worker.Wait()
-		err = <-errStateAndPidC
-		if err != nil {
-			return targetHost, err
-		}
-		err = <-errCommandsC
-		if err != nil {
-			return targetHost, err
-		}
-
-		hostMappings = append(hostMappings, HostMapping{
-			Id:           host.Id,
-			Hostname:     host.Hostname,
-			Weight:       host.Weight,
-			Servername:   host.Servername,
-			CurrentState: <-currentStateC,
-			MarkingPid:   <-markingPidC,
-			Commands:     <-commandsC,
-		})
+	hostMappings, err := getHostMappings(proc, hosts)
+	if err != nil {
+		return targetHost, err
 	}
 
 	lowestCount := 9999
@@ -315,7 +343,6 @@ func runLocalFfmpeg(config Config, proc *processor.Processor, cmd string, args [
 		})
 	})
 
-	worker.Wait()
 	runnableCommand := runCommand(rffmpegFfmpegCommand, stdin, stdout, stderr)
 	return runnableCommand.Run(), <-errProcessC, <-errStateC
 }
@@ -389,7 +416,6 @@ func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args 
 		})
 	})
 
-	worker.Wait()
 	runnableCommand := runCommand(rffmpegFullCommand, stdin, stdout, stderr)
 	return runnableCommand.Run(), <-errProcessC, <-errStateC
 }
