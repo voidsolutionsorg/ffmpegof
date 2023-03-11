@@ -63,8 +63,7 @@ commands:
 
     # Optional additions to special flags that output to stdout instead of stderr. This isn't an override.
     #special_flags:
-    #   - "-muxers"
-    #   - "-fp_format"
+    #   - ""
 
 # Database configuration
 database:

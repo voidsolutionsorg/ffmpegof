@@ -56,8 +56,8 @@ func generateSshCommand(config Config, targetHostname string) []string {
 	// Use SSH control persistence to keep sessions alive for subsequent commands
 	if config.Remote.Persist > 0 {
 		sshCommand = append(sshCommand, []string{"-o", "ControlMaster=auto"}...)
-		sshCommand = append(sshCommand, []string{"-o", fmt.Sprintf("ControlPath=%s/ssh-%r@%h:%p", config.Directories.Persist)}...)
-		sshCommand = append(sshCommand, []string{"-o", fmt.Sprintf("ControlPersist=%s", config.Remote.Persist)}...)
+		sshCommand = append(sshCommand, []string{"-o", fmt.Sprintf("ControlPath=%s", config.Directories.Persist) + "/ssh-%%r@%%h:%%p"}...)
+		sshCommand = append(sshCommand, []string{"-o", fmt.Sprintf("ControlPersist=%d", config.Remote.Persist)}...)
 	}
 
 	// Add the remote config args
