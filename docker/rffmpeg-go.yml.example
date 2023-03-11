@@ -2,7 +2,6 @@ program:
     log: "/config/log"
     debug:
 directories:
-    state: "/config/rffmpeg"
     persist: "/run"
     owner: root
     group: root
