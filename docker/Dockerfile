@@ -7,7 +7,7 @@ ARG TARGETVARIANT
 ENV \
   PATH="/app/rffmpeg-go:${PATH}"
 
-# Binary
+# Config
 COPY ["docker/rffmpeg-go.yml.example", "/etc/rffmpeg/rffmpeg.yml"]
 
 # Binary
