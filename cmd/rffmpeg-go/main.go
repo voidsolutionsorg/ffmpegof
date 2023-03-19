@@ -54,9 +54,6 @@ func main() {
 			Err(err).
 			Msg("Failed opening datastore:")
 	}
-	if config.Database.Type == "sqlite" {
-		db.SetMaxOpenConns(1)
-	}
 
 	// migrator
 	mg, err := migrate.New(db, config.Database.Type, config.Database.MigratorDir)
