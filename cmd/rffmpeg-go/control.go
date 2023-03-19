@@ -19,8 +19,7 @@ type Add struct {
 }
 
 type Rm struct {
-	Id   string `help:"Id of the server." short:"i" optional:""`
-	Name string `help:"Name of the server." short:"n" optional:""`
+	Name   string `arg:"" name:"name" help:"Name of the server." required:""`
 }
 
 type Clear struct {
@@ -51,23 +50,9 @@ func addHost(proc *processor.Processor, info Add) error {
 }
 
 func removeHost(proc *processor.Processor, info Rm) error {
-	if info.Id != "" {
-		id, err := strconv.Atoi(info.Id)
-		if err != nil {
-			return err
-		}
-		return proc.RemoveHost(processor.Host{
-			Id: id,
-		})
-	} else if info.Name != "" {
-		return proc.RemoveHost(processor.Host{
-			Servername: info.Name,
-		})
-	} else {
-		return fmt.Errorf("id or servername must be specified")
-	}
-
-	return nil
+	return proc.RemoveHost(processor.Host{
+		Servername: info.Name,
+	})
 }
 
 type StatusMapping struct {
