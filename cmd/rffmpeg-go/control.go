@@ -18,8 +18,8 @@ type Add struct {
 	Host   string `arg:"" name:"host" help:"Hostname or IP." required:""`
 }
 
-type Rm struct {
-	Name   string `arg:"" name:"name" help:"Name of the server." required:""`
+type Remove struct {
+	Name string `arg:"" name:"name" help:"Name of the server." required:""`
 }
 
 type Clear struct {
@@ -29,7 +29,7 @@ type Clear struct {
 
 type Cli struct {
 	Add    Add      `cmd:"" help:"Add host."`
-	Rm     Rm       `cmd:"" help:"Remove host."`
+	Remove Remove   `cmd:"" help:"Remove host."`
 	Status struct{} `cmd:"" help:"Status of all hosts."`
 	Clear  Clear    `cmd:"" help:"Clear processes and states."`
 }
@@ -39,17 +39,15 @@ func addHost(proc *processor.Processor, info Add) error {
 		info.Name = info.Host
 	}
 
-	err := proc.AddHost(processor.Host{
+	return proc.AddHost(processor.Host{
 		Servername: info.Name,
 		Hostname:   info.Host,
 		Weight:     info.Weight,
 		Created:    time.Now(),
 	})
-
-	return err
 }
 
-func removeHost(proc *processor.Processor, info Rm) error {
+func removeHost(proc *processor.Processor, info Remove) error {
 	return proc.RemoveHost(processor.Host{
 		Servername: info.Name,
 	})
@@ -307,9 +305,9 @@ func runControl(proc *processor.Processor) {
 					Msg("Succesfully added host")
 			}
 		}
-	case "rm <host>":
+	case "remove <name>":
 		{
-			err := removeHost(proc, cli.Rm)
+			err := removeHost(proc, cli.Remove)
 			if err != nil {
 				log.Error().
 					Err(err).

@@ -53,16 +53,16 @@ To add a target host, use the command:
 rffmpeg add [-w/--weight int] [-n/--name string] <hostname/ip>
 ```
 
-This command takes the optional weight flag to adjust the weight of the target host (see below) and name fjag to set the server name (defaults to the hostname). A host can be added more than once.
+This command takes the optional weight flag to adjust the weight of the target host (see below) and name flag to set the server name (defaults to the hostname). A host can be added more than once under a different name.
 
 ### Removing
 
 To remove a target host, use the command:
 ```bash
-rffmpeg remove <id/name>
+rffmpeg remove <name>
 ```
 
-This command takes either a target host name, which affects all instances of that name, or a specific host ID. Removing an in-use target host will not terminate any running processes, though it may result in undefined behaviour within rffmpeg. Before removing a host it is best to ensure there is nothing using it.
+This command takes a specific target server name. Removing an in-use target host will not terminate any running processes, though it may result in undefined behaviour within rffmpeg-go. Before removing a host it is best to ensure there is nothing using it.
 
 ## Logic
 

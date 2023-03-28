@@ -59,7 +59,7 @@ type Config struct {
 func LoadConfig() (Config, error) {
 	config := Config{
 		Program: Program{
-			Log:   "/var/log/jellyfin",
+			Log:   "./var/log/jellyfin",
 			Debug: false,
 		},
 		Directories: Directories{
@@ -86,7 +86,7 @@ func LoadConfig() (Config, error) {
 		},
 		Database: Database{
 			Type:     "sqlite",
-			Path:     "/var/lib/rffmpeg/db",
+			Path:     "./var/lib/rffmpeg/db",
 			Host:     "localhost",
 			Port:     5432,
 			Name:     "rffmpeg",
