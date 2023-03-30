@@ -211,7 +211,7 @@ func (store *datastore) SelectStatesId() (states []State, err error) {
 	defer rows.Close()
 	for rows.Next() {
 		state := State{}
-		err = rows.Scan(&state.Id, &state.HostId, &state.ProcessId, &state.State)
+		err = rows.Scan(&state.Id)
 		if err != nil {
 			return states, err
 		}
@@ -274,7 +274,7 @@ func (store *datastore) SelectStatesIdWhere(host Host) (states []State, err erro
 	defer rows.Close()
 	for rows.Next() {
 		state := State{}
-		err = rows.Scan(&state.Id, &state.HostId, &state.ProcessId, &state.State)
+		err = rows.Scan(&state.Id)
 		if err != nil {
 			return states, err
 		}

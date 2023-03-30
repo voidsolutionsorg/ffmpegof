@@ -222,7 +222,7 @@ func (store *datastore) SelectHostsIdWhere(fieldType string, field string) (host
 	defer rows.Close()
 	for rows.Next() {
 		host := Host{}
-		err = rows.Scan(&host.Id, &host.Servername, &host.Hostname, &host.Weight, &host.Created)
+		err = rows.Scan(&host.Id)
 		if err != nil {
 			return hosts, err
 		}

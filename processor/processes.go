@@ -211,7 +211,7 @@ func (store *datastore) SelectProcessesId() (processes []Process, err error) {
 	defer rows.Close()
 	for rows.Next() {
 		process := Process{}
-		err = rows.Scan(&process.Id, &process.HostId, &process.ProcessId, &process.Cmd)
+		err = rows.Scan(&process.Id)
 		if err != nil {
 			return processes, err
 		}
@@ -274,7 +274,7 @@ func (store *datastore) SelectProcessesIdWhere(host Host) (processes []Process, 
 	defer rows.Close()
 	for rows.Next() {
 		process := Process{}
-		err = rows.Scan(&process.Id, &process.HostId, &process.ProcessId, &process.Cmd)
+		err = rows.Scan(&process.Id)
 		if err != nil {
 			return processes, err
 		}

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -23,7 +22,6 @@ type Remove struct {
 }
 
 type Clear struct {
-	Id   string `help:"Id of the server." short:"i" optional:""`
 	Name string `help:"Name of the server." short:"n" optional:""`
 }
 
@@ -217,18 +215,7 @@ func clear(proc *processor.Processor, info Clear) (error, error) {
 	errProcess := fmt.Errorf("not yet used")
 	errState := fmt.Errorf("not yet used")
 
-	if info.Id != "" {
-		id, err := strconv.Atoi(info.Id)
-		if err != nil {
-			return errProcess, errState
-		}
-		processesId, errProcess = proc.GetProcessesIdFromHost(processor.Host{
-			Id: id,
-		})
-		statesId, errState = proc.GetStatesIdFromHost(processor.Host{
-			Id: id,
-		})
-	} else if info.Name != "" {
+	if info.Name != "" {
 		processesId, errProcess = proc.GetProcessesIdFromHost(processor.Host{
 			Servername: info.Name,
 		})
