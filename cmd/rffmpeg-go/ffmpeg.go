@@ -467,7 +467,7 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 
 	// handle interrupt signal
 	quitChannel := make(chan os.Signal, 1)
-	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
+	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP, os.Interrupt, os.Kill)
 	select {
 	case <-quitChannel:
 		{
