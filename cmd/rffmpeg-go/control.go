@@ -8,7 +8,6 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/aleksasiriski/rffmpeg-go/processor"
 	"github.com/rs/zerolog/log"
-	"github.com/sourcegraph/conc"
 )
 
 type Add struct {
@@ -210,51 +209,20 @@ func status(proc *processor.Processor) error {
 }
 
 func clear(proc *processor.Processor, info Clear) (error, error) {
-	processesId := make([]processor.Process, 0)
-	statesId := make([]processor.State, 0)
-	errProcess := fmt.Errorf("not yet used")
-	errState := fmt.Errorf("not yet used")
-
 	if info.Name != "" {
-		processesId, errProcess = proc.GetProcessesIdFromHost(processor.Host{
-			Servername: info.Name,
-		})
-		statesId, errState = proc.GetStatesIdFromHost(processor.Host{
-			Servername: info.Name,
-		})
+		hosts, err := proc.GetHostsIdByField("servername", info.Name)
+		if err != nil {
+			return err, err
+		} else {
+			return proc.RemoveProcessesByField("host_id", processor.Process{
+					HostId: hosts[0].Id,
+				}), proc.RemoveStatesByField("host_id", processor.State{
+					HostId: hosts[0].Id,
+				})
+		}
 	} else {
-		processesId, errProcess = proc.GetProcessesId()
-		statesId, errState = proc.GetStatesId()
+		return proc.RemoveProcesses(), proc.RemoveStates()
 	}
-
-	if errProcess != nil || errState != nil {
-		return errProcess, errState
-	}
-
-	var worker conc.WaitGroup
-	worker.Go(func() {
-		for _, processId := range processesId {
-			err := proc.RemoveProcessesByField("id", processId)
-			if err != nil {
-				log.Error().
-					Err(err).
-					Msg("Failed removing processes:")
-			}
-		}
-	})
-	worker.Go(func() {
-		for _, stateId := range statesId {
-			err := proc.RemoveStatesByField("id", stateId)
-			if err != nil {
-				log.Error().
-					Err(err).
-					Msg("Failed removing states:")
-			}
-		}
-	})
-	worker.Wait()
-
-	return nil, nil
 }
 
 func runControl(proc *processor.Processor) {

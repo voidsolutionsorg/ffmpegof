@@ -84,10 +84,14 @@ func (store *datastore) DeleteStatesWhere(field string, state State) error {
 	}
 	sqlDeleteStatesWhere = fmt.Sprintf(sqlDeleteStatesWhere, field)
 
-	if state.Id != 0 {
+	if field == "id" {
 		_, err = store.Exec(sqlDeleteStatesWhere, state.Id)
-	} else if state.ProcessId != 0 {
+	} else if field == "host_id" {
+		_, err = store.Exec(sqlDeleteStatesWhere, state.HostId)
+	} else if field == "process_id" {
 		_, err = store.Exec(sqlDeleteStatesWhere, state.ProcessId)
+	} else {
+		return fmt.Errorf("delete processes where: wrong field name")
 	}
 
 	if err != nil {
