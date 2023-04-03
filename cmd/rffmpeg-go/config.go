@@ -100,6 +100,7 @@ func LoadConfig() (Config, error) {
 
 	replacer := strings.NewReplacer(".", "_")
 	viper.SetEnvKeyReplacer(replacer)
+	viper.SetEnvPrefix("rffmpeg")
 	viper.AutomaticEnv()
 
 	err := viper.ReadInConfig()
