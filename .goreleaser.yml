@@ -36,7 +36,7 @@ universal_binaries:
 # Archive
 archives:
   -
-    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}_v{{ .Arm }}{{ end }}"
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ end }}"
     format: "binary"
 
 # Checksum
