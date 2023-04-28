@@ -14,8 +14,8 @@ env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
-  JELLYFIN_RFFMPEG_IMAGE_NAME: ${{ github.repository.owner }}/jellyfin-rffmpeg
-  JELLYFIN_RFFMPEG_INTRO_SKIPPER_IMAGE_NAME: ${{ github.repository.owner }}/jellyfin-rffmpeg-intro-skipper
+  JELLYFIN_RFFMPEG_IMAGE_NAME: ${{ github.repository_owner }}/jellyfin-rffmpeg
+  JELLYFIN_RFFMPEG_INTRO_SKIPPER_IMAGE_NAME: ${{ github.repository_owner }}/jellyfin-rffmpeg-intro-skipper
 
 jobs:
   build:
@@ -55,13 +55,13 @@ jobs:
         id: meta-jellyfin-rffmpeg
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}${{ env.JELLYFIN_RFFMPEG_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.JELLYFIN_RFFMPEG_IMAGE_NAME }}
 
       - name: Extract jellyfin-rffmpeg-intro-skipper Docker metadata
         id: meta-jellyfin-rffmpeg-intro-skipper
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}${{ env.JELLYFIN_RFFMPEG_INTRO_SKIPPER_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.JELLYFIN_RFFMPEG_INTRO_SKIPPER_IMAGE_NAME }}
 
       # Dependencies
       - name: goreleaser
