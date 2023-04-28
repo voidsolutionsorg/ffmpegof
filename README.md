@@ -10,27 +10,27 @@ This is a rewrite of joshuaboniface's [rffmpeg](https://github.com/joshuabonifac
 
 ### Docker
 
-This is the recommended and easiest method, you can make your own [Dockerfile](https://github.com/aleksasiriski/jellyfin-rffmpeg/blob/main/Dockerfile) and copy the appropriate binary located at `/app/rffmpeg-go/rffmpeg-go` from this image:
-```bash
-ghcr.io/aleksasiriski/rffmpeg-go
-```
-
-Or you can use my prebuilt [Jellyfin docker image](https://github.com/aleksasiriski/jellyfin-rffmpeg):
+This is the recommended and easiest method, you can use my prebuilt [Jellyfin docker image](https://ghcr.io/aleksasiriski/jellyfin-rffmpeg):
 ```bash
 ghcr.io/aleksasiriski/jellyfin-rffmpeg
+```
+
+If you want [intro-skipper](https://ghcr.io/aleksasiriski/jellyfin-rffmpeg-intro-skipper) web you can use my other prebuilt [Jellyfin Intro Skipper docker image]():
+```bash
+ghcr.io/aleksasiriski/jellyfin-rffmpeg-intro-skipper
 ```
 
 ### Binary
 
 1. Go to [releases](https://github.com/aleksasiriski/rffmpeg-go/releases) tab and download the latest binary for your OS
 
-1. Move the downloaded binary somewhere useful, for instance at `/usr/local/bin/rffmpeg`
+1. Move the downloaded binary somewhere useful, for instance at `/usr/lib/rffmpeg-go/rffmpeg`
 
 1. Make soft links to the binary named `ffmpeg` and `ffprobe` in the same folder
 
 1. Copy the [example config](https://github.com/aleksasiriski/rffmpeg-go/blob/main/rffmpeg.example.yml) to `/etc/rffmpeg/rffmpeg.yml` and change the options to your liking. **IMPORTANT: If you want to use ENV VARS to change your config, it's required to uncomment all of the options that are desired to be changed by ENV VARS. ENV VARS take precedence over the config file but are IGNORED if the config file has the options commented**
 
-1. Point your media program to use newly available ffmpeg link for `rffmpeg-go`, for instance at `/usr/local/bin/ffmpeg`
+1. Point your media program to use newly available ffmpeg link for `rffmpeg-go`, for instance at `/usr/lib/rffmpeg-go/ffmpeg`
 
 ## Hosts configuration
 
@@ -45,7 +45,7 @@ The easiest way to setup remote transcoding hosts is to use this [docker image](
 ghcr.io/aleksasiriski/rffmpeg-worker
 ```
 
-In addition to that, the easiest method to share media and transcoding dir is to setup a [NFS share](https://github.com/aleksasiriski/jellyfin-rffmpeg/blob/main/docker-compose.example.yml).
+In addition to that, the easiest method to share media and transcoding dir is to setup a [NFS share](https://github.com/aleksasiriski/rffmpeg-go/blob/main/docker-compose.example.yml).
 
 ### Adding
 To add a target host, use the command:
