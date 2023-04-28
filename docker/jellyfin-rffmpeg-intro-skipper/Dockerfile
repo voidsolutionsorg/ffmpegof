@@ -1,9 +1,10 @@
 ARG JELLYFIN_TAG=10.8.10
+
+FROM ghcr.io/onedr0p/jellyfin:${JELLYFIN_TAG}
+
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
-
-FROM ghcr.io/onedr0p/jellyfin:${JELLYFIN_TAG}
 
 COPY ["docker/jellyfin-rffmpeg/entrypoint.sh", "/entrypoint.sh"]
 COPY ["docker/jellyfin-rffmpeg/rffmpeg.yml", "/etc/rffmpeg/rffmpeg.yml"]
