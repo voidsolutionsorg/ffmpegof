@@ -13,7 +13,7 @@ builds:
       - windows
     main: ./cmd/rffmpeg-go
     goarch:
-      - amd64
+      - amd64_v1
       - arm64
       - arm
     goarm:
