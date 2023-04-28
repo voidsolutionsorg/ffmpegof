@@ -149,11 +149,6 @@ jobs:
           GITHUB_REF: ${{ github.ref }}
         run: |
           task publish
-      
-      # List build files
-      - name: list
-        run: |
-          ls -la dist/
 
       # Artifacts
       - name: artifact_linux

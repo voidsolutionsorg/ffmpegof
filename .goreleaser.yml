@@ -13,11 +13,12 @@ builds:
       - windows
     main: ./cmd/rffmpeg-go
     goarch:
-      - amd64_v1
+      - amd64
       - arm64
-      - arm
-    goarm:
-      - "7"
+    goamd64:
+      - v1
+      - v2
+      - v3
     ldflags:
       - -s -w
       - -X "main.Version={{ .Version }}"
@@ -28,12 +29,8 @@ builds:
     ignore:
       - goos: freebsd
         goarch: arm64
-      - goos: freebsd
-        goarch: arm
       - goos: windows
         goarch: arm64
-      - goos: windows
-        goarch: arm
 
 # MacOS Universal Binaries
 universal_binaries:
@@ -43,7 +40,7 @@ universal_binaries:
 # Archive
 archives:
   -
-    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Amd64 }}_v{{ .Amd64 }}{{ if .Arm }}_v{{ .Arm }}{{ end }}"
     format: "binary"
 
 # Checksum
@@ -53,7 +50,7 @@ checksum:
 
 # Snapshot
 snapshot:
-  name_template: "{{ .Major }}.{{ .Minor }}.{{ .Patch }}-dev+{{ .Branch  }}"
+  name_template: "{{ .Major }}.{{ .Minor }}.{{ .Patch }}-dev+{{ .Branch }}"
 
 # Changelog
 changelog:
