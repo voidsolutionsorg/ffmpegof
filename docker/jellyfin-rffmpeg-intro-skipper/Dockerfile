@@ -25,3 +25,5 @@ RUN apt-get -qq update \
         /var/tmp/
 
 COPY --from=ghcr.io/confusedpolarbear/jellyfin-intro-skipper:${JELLYFIN_TAG} COPY ["/jellyfin/jellyfin-web", "/usr/share/jellyfin/web"]
+
+LABEL org.opencontainers.image.source="https://github.com/jellyfin/jellyfin"

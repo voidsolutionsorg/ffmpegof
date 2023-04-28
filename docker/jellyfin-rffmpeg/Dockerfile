@@ -23,3 +23,5 @@ RUN apt-get -qq update \
         /tmp/* \
         /var/lib/apt/lists/* \
         /var/tmp/
+
+LABEL org.opencontainers.image.source="https://github.com/jellyfin/jellyfin"
