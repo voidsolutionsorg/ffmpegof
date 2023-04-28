@@ -17,7 +17,6 @@ builds:
       - arm64
     goamd64:
       - v1
-      - v2
       - v3
     ldflags:
       - -s -w
