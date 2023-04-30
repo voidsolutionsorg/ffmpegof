@@ -6,17 +6,13 @@ ADD https://github.com/jellyfin/jellyfin-web/compare/${BRANCH}...ConfusedPolarBe
 RUN git apply intros.patch
 RUN npm ci && npm run build:production
 
-ARG JELLYFIN_TAG=10.8.10
-
-FROM ghcr.io/onedr0p/jellyfin:${JELLYFIN_TAG}
-
-ARG TARGETOS
-ARG TARGETARCH
-ARG TARGETVARIANT
+FROM ghcr.io/onedr0p/jellyfin:10.8.10
 
 USER root
 
+RUN rm -rf /usr/share/jellyfin/web/
 COPY --from=build /build/dist/ /usr/share/jellyfin/web/
+
 COPY rffmpeg-go /usr/lib/rffmpeg-go/rffmpeg
 
 RUN ln -s /usr/lib/rffmpeg-go/rffmpeg /usr/lib/rffmpeg-go/ffmpeg && \
