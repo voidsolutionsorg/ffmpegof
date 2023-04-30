@@ -1,6 +1,15 @@
+FROM --platform=$BUILDPLATFORM node:18 as build
+WORKDIR /build
+ARG BRANCH=release-10.8.z
+RUN git clone --depth 1 -b "$BRANCH" https://github.com/jellyfin/jellyfin-web .
+ADD https://github.com/jellyfin/jellyfin-web/compare/${BRANCH}...ConfusedPolarBear:jellyfin-web:intros.patch intros.patch
+RUN git apply intros.patch
+RUN npm ci && npm run build:production
+
 ARG JELLYFIN_TAG=10.8.10
 
 FROM ghcr.io/onedr0p/jellyfin:${JELLYFIN_TAG}
+COPY --from=build /build/dist/ /usr/share/jellyfin/web/
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -23,8 +32,6 @@ RUN apt-get -qq update \
         /tmp/* \
         /var/lib/apt/lists/* \
         /var/tmp/
-
-COPY --from=ghcr.io/confusedpolarbear/jellyfin-intro-skipper:${JELLYFIN_TAG} /jellyfin/jellyfin-web /usr/share/jellyfin/web
 
 USER kah
 COPY apps/rffmpeg-go/rffmpeg.yml /etc/rffmpeg/rffmpeg.yml
