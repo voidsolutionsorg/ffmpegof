@@ -6,12 +6,9 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
 
-COPY ["docker/jellyfin-rffmpeg/entrypoint.sh", "/entrypoint.sh"]
-COPY ["docker/jellyfin-rffmpeg/rffmpeg.yml", "/etc/rffmpeg/rffmpeg.yml"]
-COPY ["rffmpeg-go", "/usr/lib/rffmpeg-go/rffmpeg"]
+COPY rffmpeg-go /usr/lib/rffmpeg-go/rffmpeg
 
-RUN chmod +x /usr/lib/rffmpeg-go/rffmpeg && \
-    ln -s /usr/lib/rffmpeg-go/rffmpeg /usr/lib/rffmpeg-go/ffmpeg && \
+RUN ln -s /usr/lib/rffmpeg-go/rffmpeg /usr/lib/rffmpeg-go/ffmpeg && \
     ln -s /usr/lib/rffmpeg-go/rffmpeg /usr/lib/rffmpeg-go/ffprobe
 
 RUN apt-get -qq update \
@@ -24,6 +21,11 @@ RUN apt-get -qq update \
         /tmp/* \
         /var/lib/apt/lists/* \
         /var/tmp/
+
+USER kah
+COPY apps/rffmpeg-go/rffmpeg.yml /etc/rffmpeg/rffmpeg.yml
+COPY apps/rffmpeg-go/entrypoint.sh /entrypoint.sh
+CMD ["/entrypoint.sh"]
 
 COPY --from=ghcr.io/confusedpolarbear/jellyfin-intro-skipper:${JELLYFIN_TAG} COPY ["/jellyfin/jellyfin-web", "/usr/share/jellyfin/web"]
 
