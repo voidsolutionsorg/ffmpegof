@@ -6,6 +6,8 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
 
+USER root
+
 COPY rffmpeg-go /usr/lib/rffmpeg-go/rffmpeg
 
 RUN ln -s /usr/lib/rffmpeg-go/rffmpeg /usr/lib/rffmpeg-go/ffmpeg && \
