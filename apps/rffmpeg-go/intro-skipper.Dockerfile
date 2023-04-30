@@ -29,6 +29,6 @@ COPY apps/rffmpeg-go/rffmpeg.yml /etc/rffmpeg/rffmpeg.yml
 COPY apps/rffmpeg-go/entrypoint.sh /entrypoint.sh
 CMD ["/entrypoint.sh"]
 
-COPY --from=ghcr.io/confusedpolarbear/jellyfin-intro-skipper:${JELLYFIN_TAG} COPY ["/jellyfin/jellyfin-web", "/usr/share/jellyfin/web"]
+COPY --from=ghcr.io/confusedpolarbear/jellyfin-intro-skipper:${JELLYFIN_TAG} /jellyfin/jellyfin-web /usr/share/jellyfin/web
 
 LABEL org.opencontainers.image.source="https://github.com/jellyfin/jellyfin"
