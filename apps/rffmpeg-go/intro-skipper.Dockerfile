@@ -9,7 +9,6 @@ RUN npm ci && npm run build:production
 ARG JELLYFIN_TAG=10.8.10
 
 FROM ghcr.io/onedr0p/jellyfin:${JELLYFIN_TAG}
-COPY --from=build /build/dist/ /usr/share/jellyfin/web/
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -17,6 +16,7 @@ ARG TARGETVARIANT
 
 USER root
 
+COPY --from=build /build/dist/ /usr/share/jellyfin/web/
 COPY rffmpeg-go /usr/lib/rffmpeg-go/rffmpeg
 
 RUN ln -s /usr/lib/rffmpeg-go/rffmpeg /usr/lib/rffmpeg-go/ffmpeg && \
