@@ -1,9 +1,9 @@
 # jellyfin-rffmpeg
 
-## Unofficial docker image made by including [rffmpeg-go](https://github.com/aleksasiriski/rffmpeg-go) in the onedr0p/containers Jellyfin docker image.
+## Unofficial docker image made by including [rffmpeg-go](https://github.com/aleksasiriski/rffmpeg-go) in onedr0p/containers Jellyfin docker image.
 
 ### Note: 
-* This [image](https://github.com/aleksasiriski/rffmpeg-go/blob/main/docker/jellyfin-rffmpeg/Dockerfile#L26) uses `/config/cache` for cache dir by default, instead of the official `/cache`. This allows to use a single volume for stateful data, which can save costs when using Kubernetes in the cloud.
+* This image uses `/config/cache` for cache dir by default, instead of the official `/cache`. This allows to use a single volume for stateful data, which can save costs when using Kubernetes in the cloud.
 * The public ssh key is located inside the container at `/config/rffmpeg/.ssh/id_ed25519.pub`
 * The known_hosts file is located inside the container at `/config/rffmpeg/.ssh/known_hosts`
 
@@ -30,23 +30,30 @@ If you want to use this container as a stateless app (currently not possible bec
 
 ### Workers
 
-Workers must have access to Jellyfin's `/config/cache`, `/config/transcodes` and `/config/data/subtitles` directories. It's recommended to setup [NFS share](https://github.com/aleksasiriski/jellyfin-rffmpeg/blob/main/docker-compose.example.yml) for this.
+Workers must have access to Jellyfin's `/config/cache`, `/config/transcodes` and `/config/data/subtitles` directories. It's recommended to setup [NFS share](https://github.com/aleksasiriski/rffmpeg-go/blob/main/docker-compose.example.yml) for this.
 
 For a worker docker image you can use [this](https://github.com/aleksasiriski/rffmpeg-worker).
 
 #### Adding new workers
 
-Copy the public ssh key to the worker:
+Generate a new ssh key for Jellyfin:
+```bash
+docker compose exec -it jellyfin ssh-keygen -t ed25519 -f /config/rffmpeg/.ssh/id_ed25519 -q -N ""
+```
+
+Copy the public ssh key to the worker if it supports password login:
 ```bash
 docker compose exec -it jellyfin ssh-copy-id -i /config/rffmpeg/.ssh/id_ed25519.pub root@<worker_ip_address>
 ```
 
-Add the worker to rffmpeg:
+If the worker doesn't support password login, you will have to copy the public key manually.
+
+Add the worker to rffmpeg-go db:
 ```bash
 docker compose exec -it jellyfin rffmpeg add [--weight 1] [--name first_worker] <worker_ip_address>
 ```
 
-Check the status of rffmpeg:
+Check the status of rffmpeg-go:
 
 ```bash
 docker compose exec -it jellyfin rffmpeg status

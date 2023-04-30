@@ -8,17 +8,19 @@ This is a rewrite of joshuaboniface's [rffmpeg](https://github.com/joshuabonifac
 
 ## Quick start
 
-### Docker
+### Jellyfin Docker
 
 This is the recommended and easiest method, you can use my prebuilt [Jellyfin docker image](https://ghcr.io/aleksasiriski/jellyfin-rffmpeg):
 ```bash
 ghcr.io/aleksasiriski/jellyfin-rffmpeg
 ```
 
-If you want [intro-skipper](https://ghcr.io/aleksasiriski/jellyfin-rffmpeg-intro-skipper) web you can use my other prebuilt [Jellyfin Intro Skipper docker image]():
+If you want [intro-skipper](https://github.com/ConfusedPolarBear/intro-skipper) web you can use my other prebuilt [Jellyfin Intro Skipper docker image](https://ghcr.io/aleksasiriski/jellyfin-rffmpeg-intro-skipper):
 ```bash
 ghcr.io/aleksasiriski/jellyfin-rffmpeg-intro-skipper
 ```
+
+You can read more about setting up Jellyfin [here](https://github.com/aleksasiriski/rffmpeg-go/blob/main/JELLYFIN.md).
 
 ### Binary
 
