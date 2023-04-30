@@ -7,8 +7,8 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 
 COPY rffmpeg-go /usr/lib/rffmpeg-go/rffmpeg
-COPY ./apps/rffmpeg-go/entrypoint.sh /entrypoint.sh
-COPY ./apps/rffmpeg-go/rffmpeg.yml /etc/rffmpeg/rffmpeg.yml
+COPY apps/rffmpeg-go/entrypoint.sh /entrypoint.sh
+COPY apps/rffmpeg-go/rffmpeg.yml /etc/rffmpeg/rffmpeg.yml
 
 RUN chmod +x /usr/lib/rffmpeg-go/rffmpeg && \
     ln -s /usr/lib/rffmpeg-go/rffmpeg /usr/lib/rffmpeg-go/ffmpeg && \
