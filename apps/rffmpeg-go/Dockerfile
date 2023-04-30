@@ -6,8 +6,8 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
 
-COPY ["docker/jellyfin-rffmpeg/entrypoint.sh", "/entrypoint.sh"]
-COPY ["docker/jellyfin-rffmpeg/rffmpeg.yml", "/etc/rffmpeg/rffmpeg.yml"]
+COPY ["apps/rffmpeg-go/entrypoint.sh", "/entrypoint.sh"]
+COPY ["apps/rffmpeg-go/rffmpeg.yml", "/etc/rffmpeg/rffmpeg.yml"]
 COPY ["rffmpeg-go", "/usr/lib/rffmpeg-go/rffmpeg"]
 
 RUN chmod +x /usr/lib/rffmpeg-go/rffmpeg && \
