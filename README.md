@@ -10,12 +10,12 @@ This is a rewrite of joshuaboniface's [rffmpeg](https://github.com/joshuabonifac
 
 ### Jellyfin Docker
 
-This is the recommended and easiest method, you can use my prebuilt [Jellyfin docker image](https://ghcr.io/aleksasiriski/jellyfin-rffmpeg):
+This is the recommended and easiest method, you can use my prebuilt [Jellyfin docker image](https://github.com/aleksasiriski/rffmpeg-go/pkgs/container/jellyfin-rffmpeg):
 ```bash
 ghcr.io/aleksasiriski/jellyfin-rffmpeg
 ```
 
-If you want [intro-skipper](https://github.com/ConfusedPolarBear/intro-skipper) web you can use my other prebuilt [Jellyfin Intro Skipper docker image](https://ghcr.io/aleksasiriski/jellyfin-rffmpeg-intro-skipper):
+If you want [intro-skipper](https://github.com/ConfusedPolarBear/intro-skipper) web you can use my other prebuilt [Jellyfin Intro Skipper docker image](https://github.com/aleksasiriski/rffmpeg-go/pkgs/container/jellyfin-rffmpeg-intro-skipper):
 ```bash
 ghcr.io/aleksasiriski/jellyfin-rffmpeg-intro-skipper
 ```
