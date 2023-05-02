@@ -26,7 +26,7 @@ You can read more about setting up Jellyfin [here](https://github.com/aleksasiri
 
 1. Go to [releases](https://github.com/aleksasiriski/rffmpeg-go/releases) tab and download the latest binary for your OS
 
-1. Move the downloaded binary somewhere useful, for instance at `/usr/lib/rffmpeg-go/rffmpeg`
+1. Move the downloaded binary somewhere useful, for instance at `/usr/local/bin/rffmpeg`
 
 1. Make soft links to the binary named `ffmpeg` and `ffprobe` in the same folder
 
