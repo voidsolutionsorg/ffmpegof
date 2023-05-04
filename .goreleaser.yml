@@ -40,10 +40,6 @@ checksum:
   name_template: "checksums.txt"
   algorithm: sha512
 
-# Snapshot
-snapshot:
-  name_template: "v{{ .Major }}.{{ .Minor }}.{{ .Patch }}-dev+{{ .Branch }}"
-
 # Changelog
 changelog:
   filters:
@@ -75,7 +71,7 @@ dockers:
 - image_templates:
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Version }}-amd64"
   use: buildx
-  dockerfile: ./apps/{{ .ProjectName }}/intro-skipper.Dockerfile
+  dockerfile: ./apps/{{ .ProjectName }}/Dockerfile
   build_flag_templates:
   - --platform=linux/amd64
   extra_files:
@@ -84,7 +80,7 @@ dockers:
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Version }}-arm64"
   use: buildx
   goarch: arm64
-  dockerfile: ./apps/{{ .ProjectName }}/intro-skipper.Dockerfile
+  dockerfile: ./apps/{{ .ProjectName }}/Dockerfile
   build_flag_templates:
   - --platform=linux/arm64
   extra_files:
@@ -95,11 +91,15 @@ docker_manifests:
   image_templates:
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
-- name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:latest"
+- name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Major }}"
   image_templates:
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
-- name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Major }}"
+- name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Major }}.{{ .Minor }}"
+  image_templates:
+  - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+  - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
+- name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:{{ if .IsSnapshot }}{{ .Branch }}{{ else }}latest{{ end }}"
   image_templates:
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
@@ -108,11 +108,15 @@ docker_manifests:
   image_templates:
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Version }}-amd64"
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Version }}-arm64"
-- name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:latest"
+- name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Major }}"
   image_templates:
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Version }}-amd64"
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Version }}-arm64"
-- name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Major }}"
+- name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Major }}.{{ .Minor }}"
+  image_templates:
+  - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Version }}-amd64"
+  - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Version }}-arm64"
+- name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:{{ if .IsSnapshot }}{{ .Branch }}{{ else }}latest{{ end }}"
   image_templates:
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Version }}-amd64"
   - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME_ALT }}:v{{ .Version }}-arm64"
