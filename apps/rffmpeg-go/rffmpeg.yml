@@ -22,17 +22,17 @@ directories:
     # The user who should own the state directory and database.
     # This should normally be the user who normally runs rffmpeg commands (i.e. the media
     # server service user).
-    owner: root
+    owner: kah
 
     # The group who should own the state directory and database (an administrative group).
     # Use this group to control who is able to run "rffmpeg" management commands; users in
     # this group will have unlimited access to the tool to add/remove hosts, view status, etc.
-    group: root
+    group: kah
 
 # Remote (SSH) configuration
 remote:
     # The remote SSH user to connect as.
-    user: root
+    user: kah
 
     # How long to persist SSH sessions; 0 to disable SSH persistence.
     persist: 300
