@@ -50,6 +50,8 @@ docker compose exec -it jellyfin ssh-copy-id -i /config/rffmpeg/.ssh/id_ed25519.
 
 If the worker doesn't support password login, you will have to copy the public key manually.
 
+**If you're using my rffmpeg-worker image, then the copied keys are stateless. Either add a volume to `/etc/authorized_keys` or make a file binding for the required ssh keys**
+
 Add the worker to rffmpeg-go db:
 ```bash
 docker compose exec -it jellyfin rffmpeg add [--weight 1] [--name first_worker] <worker_ip_address>
