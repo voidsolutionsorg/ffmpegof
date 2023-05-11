@@ -3,8 +3,11 @@ FROM ghcr.io/onedr0p/jellyfin:10.8.10@sha256:1ef614db6a4c589777eb48bc9004d573b9c
 USER root
 COPY rffmpeg-go /usr/local/bin/rffmpeg
 
-RUN ln -s /usr/local/bin/rffmpeg /usr/local/bin/ffmpeg && \
-    ln -s /usr/local/bin/rffmpeg /usr/local/bin/ffprobe
+RUN ln -s /usr/local/bin/rffmpeg /usr/local/bin/ffmpeg \
+    && ln -s /usr/local/bin/rffmpeg /usr/local/bin/ffprobe
+
+RUN mkdir -p /run/shm \
+    && chown kah:kah /run/shm
 
 RUN apt-get -qq update \
     && apt-get -qq install -y openssh-client \

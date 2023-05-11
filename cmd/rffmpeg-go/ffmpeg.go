@@ -44,7 +44,9 @@ func generateSshCommand(config Config, targetHostname string) []string {
 
 	// Add SSH component
 	sshCommand = append(sshCommand, config.Commands.Ssh)
-	sshCommand = append(sshCommand, "-q")
+	if !config.Program.Debug {
+		sshCommand = append(sshCommand, "-q")
+	}
 	sshCommand = append(sshCommand, "-t")
 
 	// Set our connection details

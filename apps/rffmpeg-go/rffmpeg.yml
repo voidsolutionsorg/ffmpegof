@@ -17,7 +17,7 @@ program:
 # Directory configuration
 directories:
     # Temporary directory to store SSH persistence sockets.
-    persist: "/run"
+    persist: "/run/shm"
 
     # The user who should own the state directory and database.
     # This should normally be the user who normally runs rffmpeg commands (i.e. the media
