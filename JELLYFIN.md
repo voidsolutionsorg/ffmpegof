@@ -41,6 +41,8 @@ Generate a new ssh key for Jellyfin:
 docker compose exec -it jellyfin ssh-keygen -t ed25519 -f /config/rffmpeg/.ssh/id_ed25519 -q -N ""
 ```
 
+**Absolutely make sure that `/config/rffmpeg/.ssh` has 700 or 600 chmod-ed permissions, otherwise the remote ssh commands will fail with UNPROTECTED PRIVATE KEY FILE! error**
+
 Copy the public ssh key to the worker if it supports password login:
 ```bash
 docker compose exec -it jellyfin ssh-copy-id -i /config/rffmpeg/.ssh/id_ed25519.pub root@<worker_ip_address>
