@@ -438,7 +438,7 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 			ret := fmt.Errorf("not yet run")
 			errProcess := fmt.Errorf("not yet run")
 			errState := fmt.Errorf("not yet run")
-			if target.Hostname == "localhost" || target.Hostname == "127.0.0.1" {
+			if target.Hostname == "localhost" || target.Hostname == "127.0.0.1" || target.Hostname == "::1" {
 				ret, errProcess, errState = runLocalFfmpeg(config, proc, cmd, args)
 			} else {
 				ret, errProcess, errState = runRemoteFfmpeg(config, proc, cmd, args, target)
@@ -454,15 +454,6 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 					Err(errState).
 					Msg("Failed adding state:")
 			}
-
-			if ret != nil {
-				log.Error().
-					Err(ret).
-					Msg("Finished rffmpeg with error:")
-			} else {
-				log.Info().
-					Msg("Finished rffmpeg successfully")
-			}
 			returnChannel <- ret
 		}
 	})
@@ -476,10 +467,16 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 			log.Warn().
 				Msg("Forced quit executed")
 		}
-	case <-returnChannel:
+	case ret := <-returnChannel:
 		{
-			log.Info().
-				Msg("Finished running command")
+			if ret != nil {
+				log.Error().
+					Err(ret).
+					Msg("Finished rffmpeg with error:")
+			} else {
+				log.Info().
+					Msg("Finished rffmpeg successfully")
+			}
 		}
 	}
 
