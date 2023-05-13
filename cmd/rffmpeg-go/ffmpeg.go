@@ -435,9 +435,7 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 				Err(err).
 				Msg("Failed getting target host:")
 		} else {
-			ret := fmt.Errorf("not yet run")
-			errProcess := fmt.Errorf("not yet run")
-			errState := fmt.Errorf("not yet run")
+			var ret, errProcess, errState error
 			if target.Hostname == "localhost" || target.Hostname == "127.0.0.1" || target.Hostname == "::1" {
 				ret, errProcess, errState = runLocalFfmpeg(config, proc, cmd, args)
 			} else {
