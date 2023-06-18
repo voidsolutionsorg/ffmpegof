@@ -25,10 +25,10 @@ services:
       - SYS_ADMIN
     environment:
       - TZ=Europe/Berlin
-      - NFS_EXPORT_0="/config/cache           *(rw,sync,no_subtree_check,no_root_squash)"
-      - NFS_EXPORT_1="/config/transcodes      *(rw,sync,no_subtree_check,no_root_squash)"
-      - NFS_EXPORT_2="/config/data/subtitles  *(rw,sync,no_subtree_check,no_root_squash)"
-      - NFS_EXPORT_3="/var/storage/media      *(rw,sync,no_subtree_check,no_root_squash)" # optional media folder
+      - NFS_EXPORT_0=/config/cache           *(rw,sync,no_subtree_check,no_root_squash)
+      - NFS_EXPORT_1=/config/transcodes      *(rw,sync,no_subtree_check,no_root_squash)
+      - NFS_EXPORT_2=/config/data/subtitles  *(rw,sync,no_subtree_check,no_root_squash)
+      - NFS_EXPORT_3=/var/storage/media      *(rw,sync,no_subtree_check,no_root_squash) # optional media folder
     ports:
       - ${JELLYFIN_LAN_ONLY_IP:-}:2049:2049
     volumes:
