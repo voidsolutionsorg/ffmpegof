@@ -10,7 +10,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/viper v1.16.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
-	modernc.org/sqlite v1.23.1
+	modernc.org/sqlite v1.24.0
 )
 
 require (
