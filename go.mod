@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/kong v0.8.0
 	github.com/lib/pq v1.10.9
 	github.com/oriser/regroup v0.0.0-20210730155327-fca8d7531263
-	github.com/rs/zerolog v1.29.1
+	github.com/rs/zerolog v1.30.0
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/viper v1.16.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
