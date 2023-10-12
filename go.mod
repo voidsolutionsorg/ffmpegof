@@ -3,7 +3,7 @@ module github.com/aleksasiriski/rffmpeg-go
 go 1.19
 
 require (
-	github.com/alecthomas/kong v0.8.0
+	github.com/alecthomas/kong v0.8.1
 	github.com/lib/pq v1.10.9
 	github.com/oriser/regroup v0.0.0-20210730155327-fca8d7531263
 	github.com/rs/zerolog v1.31.0
