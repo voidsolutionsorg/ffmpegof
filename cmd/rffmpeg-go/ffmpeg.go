@@ -169,7 +169,8 @@ func getHostMappings(proc *processor.Processor, hosts []processor.Host) ([]HostM
 	hostMappingC := make(chan HostMapping, len(hosts))
 	var worker conc.WaitGroup
 
-	for _, host := range hosts {
+	for _, h := range hosts {
+		host := h
 		worker.Go(func() {
 			hostMapping, err := getHostMapping(proc, host)
 			if err != nil {
