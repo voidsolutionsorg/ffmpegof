@@ -6,7 +6,7 @@ ADD https://github.com/jellyfin/jellyfin-web/compare/${BRANCH}...ConfusedPolarBe
 RUN git apply intros.patch
 RUN npm ci && npm run build:production
 
-FROM ghcr.io/onedr0p/jellyfin:10.8.10@sha256:1ef614db6a4c589777eb48bc9004d573b9c09f0d6d573a509041c6060f3a956b
+FROM ghcr.io/onedr0p/jellyfin:10.8.11@sha256:041977cb09d964ed4e00dec2bd0af3208f0121b8385a69617d30657596ffa292
 
 USER root
 COPY rffmpeg-go /usr/local/bin/rffmpeg
