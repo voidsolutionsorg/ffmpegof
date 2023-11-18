@@ -220,13 +220,13 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 			continue
 		}
 
-		if hostMapping.Hostname == "localhost" || hostMapping.Hostname == "127.0.0.1" {
+		if hostMapping.Hostname != "localhost" && hostMapping.Hostname != "127.0.0.1" {
 			log.Debug().
 				Msg("Running SSH test")
 
 			testSshCommand := generateSshCommand(config, hostMapping.Hostname)
 			testSshCommand = removeFromSlice(testSshCommand, "-q")
-			testFfmpegCommand := config.Commands.Ffmpeg + "-version"
+			testFfmpegCommand := config.Commands.Ffmpeg + " -version"
 			testFullCommand := append(testSshCommand, testFfmpegCommand)
 			testCommand := runCommand(testFullCommand, os.Stdin, os.Stdout, os.Stderr)
 			err = testCommand.Run()
