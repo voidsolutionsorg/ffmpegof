@@ -8,7 +8,7 @@ require (
 	github.com/oriser/regroup v0.0.0-20210730155327-fca8d7531263
 	github.com/rs/zerolog v1.31.0
 	github.com/sourcegraph/conc v0.3.0
-	github.com/spf13/viper v1.18.0
+	github.com/spf13/viper v1.18.1
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	modernc.org/sqlite v1.27.0
 )
