@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"database/sql"
+
 	_ "github.com/lib/pq"
 	_ "modernc.org/sqlite"
 )
@@ -53,16 +54,16 @@ func (store *datastore) UpsertHost(host Host) error {
 	return tx.Commit()
 }
 
-func sqlDeleteHosts(dbType string) (string, error) {
-	switch dbType {
-	case "sqlite":
-		return `DELETE FROM hosts`, nil
-	case "postgres":
-		return `DELETE FROM hosts`, nil
-	default:
-		return "", fmt.Errorf("incorrect database type")
-	}
-}
+// func sqlDeleteHosts(dbType string) (string, error) {
+// 	switch dbType {
+// 	case "sqlite":
+// 		return `DELETE FROM hosts`, nil
+// 	case "postgres":
+// 		return `DELETE FROM hosts`, nil
+// 	default:
+// 		return "", fmt.Errorf("incorrect database type")
+// 	}
+// }
 
 func (store *datastore) DeleteHosts() error {
 	sqlDeleteHost, err := sqlDeleteHost(store.dbType)

@@ -5,10 +5,11 @@ import (
 	"fmt"
 
 	"database/sql"
+
 	_ "github.com/lib/pq"
 	_ "modernc.org/sqlite"
 
-	"github.com/aleksasiriski/rffmpeg-go/migrate"
+	"github.com/tminaorg/ffmpegof/src/migrate"
 )
 
 type datastore struct {

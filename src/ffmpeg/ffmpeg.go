@@ -1,4 +1,4 @@
-package main
+package ffmpeg
 
 import (
 	"fmt"
@@ -10,20 +10,11 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/aleksasiriski/rffmpeg-go/processor"
 	"github.com/rs/zerolog/log"
 	"github.com/sourcegraph/conc"
+	"github.com/tminaorg/ffmpegof/src/config"
+	"github.com/tminaorg/ffmpegof/src/processor"
 )
-
-type HostMapping struct {
-	Id           int
-	Servername   string
-	Hostname     string
-	Weight       int
-	CurrentState string
-	MarkingPid   string
-	Commands     []int
-}
 
 // signum="", frame=""
 func cleanup(pid int, proc *processor.Processor) (error, error) {
@@ -39,7 +30,7 @@ func cleanup(pid int, proc *processor.Processor) (error, error) {
 	return <-errStates, <-errProcesses
 }
 
-func generateSshCommand(config Config, targetHostname string) []string {
+func generateSshCommand(config *config.Config, targetHostname string) []string {
 	sshCommand := make([]string, 0)
 
 	// Add SSH component
@@ -176,7 +167,8 @@ func getHostMappings(proc *processor.Processor, hosts []processor.Host) ([]HostM
 			if err != nil {
 				log.Error().
 					Err(err).
-					Msg(fmt.Sprintf("Failed to make host mapping for %s", host.Servername))
+					Str("host", host.Servername).
+					Msg("failed to make host mapping")
 			} else {
 				hostMappingC <- hostMapping
 			}
@@ -191,7 +183,7 @@ func getHostMappings(proc *processor.Processor, hosts []processor.Host) ([]HostM
 	return hostMappings, nil
 }
 
-func getTargetHost(config Config, proc *processor.Processor) (processor.Host, error) {
+func getTargetHost(config *config.Config, proc *processor.Processor) (processor.Host, error) {
 	targetHost := processor.Host{
 		Id:         0,
 		Servername: "localhost (fallback)",
@@ -211,18 +203,15 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 
 	lowestCount := 9999
 	for _, hostMapping := range hostMappings {
-		log.Debug().
-			Msg(fmt.Sprintf("Trying host %s", hostMapping.Servername))
+		log.Debug().Str("host", hostMapping.Servername).Msg("trying")
 
 		if hostMapping.CurrentState == "bad" {
-			log.Debug().
-				Msg(fmt.Sprintf("Host previously marked bad by PID %s", hostMapping.MarkingPid))
+			log.Debug().Str("pid", hostMapping.MarkingPid).Msg("host previously marked bad")
 			continue
 		}
 
 		if hostMapping.Hostname != "localhost" && hostMapping.Hostname != "127.0.0.1" {
-			log.Debug().
-				Msg("Running SSH test")
+			log.Debug().Msg("running ssh test")
 
 			testSshCommand := generateSshCommand(config, hostMapping.Hostname)
 			testSshCommand = removeFromSlice(testSshCommand, "-q")
@@ -233,8 +222,11 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 			if err != nil {
 				// Mark the host as bad
 				log.Warn().
+					Err(err).
+					Str("host", hostMapping.Servername).
 					Str("command", strings.Join(testFullCommand, " ")).
-					Msg(fmt.Sprintf("Marking host %s as bad due to: %w", hostMapping.Servername, err))
+					Msg("marking as bad")
+
 				err = proc.AddState(processor.State{
 					HostId:    hostMapping.Id,
 					ProcessId: config.Program.Pid,
@@ -242,8 +234,7 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 				})
 				continue
 			}
-			log.Debug().
-				Msg("SSH test succeeded")
+			log.Debug().Msg("ssh test succeeded")
 		}
 
 		// If the host state is idle, we can use it immediately
@@ -251,8 +242,7 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 			targetHost.Id = hostMapping.Id
 			targetHost.Servername = hostMapping.Servername
 			targetHost.Hostname = hostMapping.Hostname
-			log.Debug().
-				Msg("Selecting host as idle")
+			log.Debug().Msg("selecting host as idle")
 			break
 		}
 
@@ -269,7 +259,7 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 			log.Debug().
 				Str("raw", fmt.Sprintf("%d", rawProcCount)).
 				Str("weighted", fmt.Sprintf("%d", weightedProcCount)).
-				Msg("Selecting host as current lowest proc count")
+				Msg("selecting host as current lowest proc count")
 		}
 	}
 
@@ -277,7 +267,7 @@ func getTargetHost(config Config, proc *processor.Processor) (processor.Host, er
 		Str("id", fmt.Sprintf("%d", targetHost.Id)).
 		Str("servername", targetHost.Servername).
 		Str("hostname", targetHost.Hostname).
-		Msg("Found optimal host")
+		Msg("found optimal host")
 	return targetHost, err
 }
 
@@ -290,8 +280,8 @@ func sliceContains(slice []string, elem string) bool {
 	return false
 }
 
-func runLocalFfmpeg(config Config, proc *processor.Processor, cmd string, args []string) (error, error, error) {
-	rffmpegFfmpegCommand := make([]string, 0)
+func runLocalFfmpeg(config *config.Config, proc *processor.Processor, cmd string, args []string) (error, error, error) {
+	ffmpegofFfmpegCommand := make([]string, 0)
 
 	// Prepare our default stdin/stdout/stderr
 	stdin := os.Stdin
@@ -300,15 +290,15 @@ func runLocalFfmpeg(config Config, proc *processor.Processor, cmd string, args [
 
 	if strings.Contains(cmd, "ffprobe") {
 		// If we're in ffprobe mode use that command and os.Stdout as stdout
-		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.Commands.Ffprobe)
+		ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, config.Commands.Ffprobe)
 	} else {
 		// Otherwise, we use stderr as stdout
-		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.Commands.Ffmpeg)
+		ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, config.Commands.Ffmpeg)
 		stdout = stderr
 	}
 
 	// Append all the passed arguments directly
-	rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, args...)
+	ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, args...)
 
 	// Check for special flags that override the default stdout
 	for _, arg := range args {
@@ -318,12 +308,8 @@ func runLocalFfmpeg(config Config, proc *processor.Processor, cmd string, args [
 		}
 	}
 
-	log.Info().
-		Msg("Running command on localhost")
-
-	log.Debug().
-		Str("command", strings.Join(rffmpegFfmpegCommand, " ")).
-		Msg("Localhost")
+	log.Info().Msg("running command on localhost")
+	log.Debug().Str("command", strings.Join(ffmpegofFfmpegCommand, " ")).Msg("localhost")
 
 	var worker conc.WaitGroup
 
@@ -346,16 +332,16 @@ func runLocalFfmpeg(config Config, proc *processor.Processor, cmd string, args [
 		})
 	})
 
-	runnableCommand := runCommand(rffmpegFfmpegCommand, stdin, stdout, stderr)
+	runnableCommand := runCommand(ffmpegofFfmpegCommand, stdin, stdout, stderr)
 	return runnableCommand.Run(), <-errProcessC, <-errStateC
 }
 
-func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args []string, target processor.Host) (error, error, error) {
-	rffmpegSshCommand := generateSshCommand(config, target.Hostname)
-	rffmpegFfmpegCommand := make([]string, 0)
+func runRemoteFfmpeg(config *config.Config, proc *processor.Processor, cmd string, args []string, target processor.Host) (error, error, error) {
+	ffmpegofSshCommand := generateSshCommand(config, target.Hostname)
+	ffmpegofFfmpegCommand := make([]string, 0)
 
 	// Add any pre commands
-	rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.Commands.Pre...)
+	ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, config.Commands.Pre...)
 
 	// Prepare our default stdin/stdout/stderr
 	stdin := os.Stdin
@@ -364,10 +350,10 @@ func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args 
 
 	if strings.Contains(cmd, "ffprobe") {
 		// If we're in ffprobe mode use that command and os.Stdout as stdout
-		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.Commands.Ffprobe)
+		ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, config.Commands.Ffprobe)
 	} else {
 		// Otherwise, we use stderr as stdout
-		rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, config.Commands.Ffmpeg)
+		ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, config.Commands.Ffmpeg)
 		stdout = stderr
 	}
 
@@ -378,9 +364,9 @@ func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args 
 	for _, arg := range args {
 		// Match bad shell characters: * ' ( ) | [ ] or whitespace
 		if re.Match([]byte(arg)) {
-			rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, fmt.Sprintf("\"%s\"", arg))
+			ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, fmt.Sprintf("\"%s\"", arg))
 		} else {
-			rffmpegFfmpegCommand = append(rffmpegFfmpegCommand, arg)
+			ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, arg)
 		}
 
 		if !foundSpecialFlag && sliceContains(config.Commands.SpecialFlags, arg) {
@@ -389,14 +375,10 @@ func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args 
 		}
 	}
 
-	rffmpegFullCommand := append(rffmpegSshCommand, rffmpegFfmpegCommand...)
+	ffmpegofFullCommand := append(ffmpegofSshCommand, ffmpegofFfmpegCommand...)
 
-	log.Info().
-		Msg(fmt.Sprintf("Running command on host %s", target.Servername))
-
-	log.Debug().
-		Str("command", strings.Join(rffmpegFullCommand, " ")).
-		Msg("Remote")
+	log.Info().Str("host", target.Servername).Msg("running command")
+	log.Debug().Str("command", strings.Join(ffmpegofFullCommand, " ")).Msg("remote")
 
 	var worker conc.WaitGroup
 
@@ -419,22 +401,19 @@ func runRemoteFfmpeg(config Config, proc *processor.Processor, cmd string, args 
 		})
 	})
 
-	runnableCommand := runCommand(rffmpegFullCommand, stdin, stdout, stderr)
+	runnableCommand := runCommand(ffmpegofFullCommand, stdin, stdout, stderr)
 	return runnableCommand.Run(), <-errProcessC, <-errStateC
 }
 
-func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []string) error {
+func Run(config *config.Config, proc *processor.Processor, cmd string, args []string) {
 	returnChannel := make(chan error, 1)
 	var worker conc.WaitGroup
 	worker.Go(func() {
-		log.Info().
-			Msg(fmt.Sprintf("Starting rffmpeg as %s with args: %s", cmd, strings.Join(args[:], " ")))
+		log.Info().Str("as", cmd).Str("args", strings.Join(args[:], " ")).Msg("starting ffmpegof")
 
 		target, err := getTargetHost(config, proc)
 		if err != nil {
-			log.Error().
-				Err(err).
-				Msg("Failed getting target host:")
+			log.Error().Err(err).Msg("failed getting target host")
 		} else {
 			var ret, errProcess, errState error
 			if target.Hostname == "localhost" || target.Hostname == "127.0.0.1" || target.Hostname == "::1" {
@@ -444,14 +423,10 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 			}
 
 			if errProcess != nil {
-				log.Error().
-					Err(errProcess).
-					Msg("Failed adding process:")
+				log.Error().Err(errProcess).Msg("failed adding process")
 			}
 			if errState != nil {
-				log.Error().
-					Err(errState).
-					Msg("Failed adding state:")
+				log.Error().Err(errState).Msg("failed adding state")
 			}
 			returnChannel <- ret
 		}
@@ -459,37 +434,27 @@ func runFfmpeg(config Config, proc *processor.Processor, cmd string, args []stri
 
 	// handle interrupt signal
 	quitChannel := make(chan os.Signal, 1)
-	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP, os.Interrupt, os.Kill)
+	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP, os.Interrupt)
 	select {
 	case <-quitChannel:
 		{
-			log.Warn().
-				Msg("Forced quit executed")
+			log.Warn().Msg("forced quit executed")
 		}
 	case ret := <-returnChannel:
 		{
 			if ret != nil {
-				log.Error().
-					Err(ret).
-					Msg("Finished rffmpeg with error:")
+				log.Error().Err(ret).Msg("finished ffmpegof with error")
 			} else {
-				log.Info().
-					Msg("Finished rffmpeg successfully")
+				log.Info().Msg("finished ffmpegof successfully")
 			}
 		}
 	}
 
 	errStates, errProcesses := cleanup(config.Program.Pid, proc)
 	if errStates != nil {
-		log.Error().
-			Err(errStates).
-			Msg("Error occured during cleanup of states:")
+		log.Error().Err(errStates).Msg("error occured during cleanup of states")
 	}
 	if errProcesses != nil {
-		log.Error().
-			Err(errProcesses).
-			Msg("Error occured during cleanup of processes:")
+		log.Error().Err(errProcesses).Msg("error occured during cleanup of processes")
 	}
-
-	return nil
 }

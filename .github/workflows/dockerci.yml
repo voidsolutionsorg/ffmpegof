@@ -1,0 +1,68 @@
+name: Docker CI
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/dockerci.yml" # this file
+      - "go.mod"
+      - "go.sum"
+      - "Makefile"
+      - "goreleaser/develop.yml"
+      - "generate/**/*"
+      - "src/**/*"
+      - "docker/**/*"
+      - ".dockerignore"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      # go:generate
+      - name: Generate go code from go:generate comments
+        run: make setup
+
+      # goreleaser snapshot
+      - name: Snapshot
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --snapshot --clean --config goreleaser/develop.yml
+
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      # go:generate
+      - name: Generate go code from go:generate comments
+        run: make setup
+
+      # go:build
+      - name: Build project
+        run: make build
+
+      # go:test
+      - name: Test units
+        run: make test

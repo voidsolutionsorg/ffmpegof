@@ -1,0 +1,60 @@
+name: Testing CI
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/testingci.yml" # this file
+      - "go.mod"
+      - "go.sum"
+      - "Makefile"
+      - "generate/**/*"
+      - "src/**/*"
+  schedule:
+    - cron: "37 13 * * *"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      # go:generate
+      - name: Generate go code from go:generate comments
+        run: make setup
+
+      # go:build
+      - name: Build project
+        run: make build
+
+      # go:test
+      - name: Test units
+        run: make test
+
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      # go:generate
+      - name: Generate go code from go:generate comments
+        run: make setup
+
+      # lint
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          skip-pkg-cache: true
+          args: --timeout=5m

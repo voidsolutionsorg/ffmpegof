@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/aleksasiriski/rffmpeg-go/migrate"
+	"github.com/tminaorg/ffmpegof/src/migrate"
 )
 
 type Config struct {
@@ -48,8 +48,8 @@ func New(config Config) (*Processor, error) {
 }
 
 type Processor struct {
-	store     *datastore
-	processed int64
+	store *datastore
+	// processed int64
 }
 
 // version
