@@ -1,3 +1,6 @@
+# UNMAINTAINED
+This repo will be archived when I finish work on [morana](https://github.com/tminaorg/morana)
+
 # ffmpegof
 
 This is a rewrite of joshuaboniface's [rffmpeg](https://github.com/joshuaboniface/rffmpeg) in Go! This wouldn't be possible without his work.
