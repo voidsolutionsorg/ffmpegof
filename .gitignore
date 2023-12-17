@@ -14,8 +14,14 @@
 # Dependency directories (remove the comment below to include it)
 vendor/
 # config dir and binary
-var/
-config/
-rffmpeg-bin
+data/
+log/
+
+# binaries
+ffmpegof-bin
 ffmpeg
 ffprobe
+
+# but allow packages (dir)
+!ffmpeg/
+!ffprobe/

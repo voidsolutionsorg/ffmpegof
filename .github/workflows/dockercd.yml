@@ -1,0 +1,72 @@
+name: Docker CD
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      # build arm
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      # registry
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # go:generate
+      - name: Generate go code from go:generate comments
+        run: make setup
+
+      # goreleaser release
+      - name: Release
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --clean --config goreleaser/release.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      ## artifacts
+      - name: Artifact Linux
+        uses: actions/upload-artifact@v3
+        with:
+          name: build_linux
+          path: dist/*linux*
+
+      - name: Artifact Darwin
+        uses: actions/upload-artifact@v3
+        with:
+          name: build_darwin
+          path: dist/*darwin*
+
+      - name: Artifact Windows
+        uses: actions/upload-artifact@v3
+        with:
+          name: build_windows
+          path: dist/*windows*

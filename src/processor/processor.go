@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/aleksasiriski/rffmpeg-go/migrate"
+	"github.com/tminaorg/ffmpegof/src/migrate"
 )
 
 type Config struct {

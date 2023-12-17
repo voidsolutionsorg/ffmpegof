@@ -1,0 +1,87 @@
+# .goreleaser.yml
+project_name: ffmpegof
+
+# Build
+builds:
+  - env: [CGO_ENABLED=0]
+    goos:
+      - linux
+      - darwin
+      - freebsd
+      - windows
+    main: ./src
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X "main.Version=v{{ .Version }}"
+      - -X "main.GitCommit={{ .ShortCommit }}"
+      - -X "main.Timestamp={{ .Timestamp }}"
+    flags:
+      - -trimpath
+    ignore:
+      - goos: freebsd
+        goarch: arm64
+      - goos: windows
+        goarch: arm64
+
+# MacOS Universal Binaries
+universal_binaries:
+  - replace: true
+
+# Archive
+archives:
+  - name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    format: "binary"
+
+# Checksum
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha512
+
+# Changelog
+changelog:
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^Merge branch"
+
+# Docker
+dockers:
+  - image_templates:
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+    use: buildx
+    dockerfile: ./docker/Dockerfile
+    build_flag_templates:
+      - --platform=linux/amd64
+    extra_files:
+      - docker
+  - image_templates:
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
+    use: buildx
+    goarch: arm64
+    dockerfile: ./docker/Dockerfile
+    build_flag_templates:
+      - --platform=linux/arm64
+    extra_files:
+      - docker
+
+docker_manifests:
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}"
+    image_templates:
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Major }}"
+    image_templates:
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:{{ if .IsSnapshot }}{{ .Branch }}{{ else }}latest{{ end }}"
+    image_templates:
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-arm64"
