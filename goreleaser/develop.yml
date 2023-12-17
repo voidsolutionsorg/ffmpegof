@@ -42,9 +42,9 @@ changelog:
 # Docker
 dockers:
   - image_templates:
-      - "{{ .Env.REGISTRY }}/{{ .Env.IMAGE_NAME }}:v{{ .Version }}-amd64"
+      - "{{ .Env.REGISTRY }}/{{ .Env.JELLYFIN_IMAGE_NAME }}:v{{ .Version }}-amd64"
     use: buildx
-    dockerfile: ./docker/Dockerfile
+    dockerfile: ./docker/jellyfin/Dockerfile
     build_flag_templates:
       - --platform=linux/amd64
     extra_files:

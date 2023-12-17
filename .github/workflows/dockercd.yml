@@ -7,6 +7,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  JELLYFIN_IMAGE_NAME: jellyfin-${{ github.repository }}
+  JELLYFIN_INTRO_SKIPPER_IMAGE_NAME: jellyfin-${{ github.repository }}-intro-skipper
 
 jobs:
   goreleaser:
