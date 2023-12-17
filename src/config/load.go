@@ -41,8 +41,8 @@ func (c *Config) Load(dataDirPath string) error {
 	}
 
 	// Load ENV config
-	if err := k.Load(env.Provider("ffmpegof_", ".", func(s string) string {
-		return strings.Replace(strings.ToLower(strings.TrimPrefix(s, "ffmpegof_")), "_", ".", -1)
+	if err := k.Load(env.Provider("FFMPEGOF_", ".", func(s string) string {
+		return strings.Replace(strings.ToLower(strings.TrimPrefix(s, "FFMPEGOF_")), "_", ".", -1)
 	}), nil); err != nil {
 		return fmt.Errorf("config.Load(): error loading env config")
 	}
