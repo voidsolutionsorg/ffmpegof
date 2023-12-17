@@ -18,7 +18,7 @@ import (
 func main() {
 	// load config
 	c := config.New()
-	if err := c.Load("data", "log"); err != nil {
+	if err := c.Load("/etc/ffmpegof"); err != nil {
 		panic(fmt.Errorf("cannot load config: %s", err.Error()))
 	}
 

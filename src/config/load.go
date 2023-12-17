@@ -15,7 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (c *Config) Load(dataDirPath string, logDirPath string) error {
+func (c *Config) Load(dataDirPath string) error {
 	// Use "." as the key path delimiter. This can be "/" or any character.
 	k := koanf.New(".")
 
