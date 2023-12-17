@@ -48,8 +48,8 @@ func New(config Config) (*Processor, error) {
 }
 
 type Processor struct {
-	store     *datastore
-	processed int64
+	store *datastore
+	// processed int64
 }
 
 // version
