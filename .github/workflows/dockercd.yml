@@ -54,19 +54,19 @@ jobs:
 
       ## artifacts
       - name: Artifact Linux
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build_linux
           path: dist/*linux*
 
       - name: Artifact Darwin
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build_darwin
           path: dist/*darwin*
 
       - name: Artifact Windows
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build_windows
           path: dist/*windows*
