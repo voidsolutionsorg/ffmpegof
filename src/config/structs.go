@@ -19,7 +19,7 @@ type Remote struct {
 }
 
 type Commands struct {
-	Ssh             string   `koanf:"ssd"`
+	Ssh             string   `koanf:"ssh"`
 	Pre             []string `koanf:"pre"`
 	Ffmpeg          string   `koanf:"ffmpeg"`
 	Ffprobe         string   `koanf:"ffprobe"`
