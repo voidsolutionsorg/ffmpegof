@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"github.com/sourcegraph/conc"
@@ -213,28 +214,48 @@ func getTargetHost(config *config.Config, proc *processor.Processor) (processor.
 		if hostMapping.Hostname != "localhost" && hostMapping.Hostname != "127.0.0.1" {
 			log.Debug().Msg("running ssh test")
 
-			testSshCommand := generateSshCommand(config, hostMapping.Hostname)
-			testSshCommand = removeFromSlice(testSshCommand, "-q")
-			testFfmpegCommand := config.Commands.Ffmpeg + " -version"
-			testFullCommand := append(testSshCommand, testFfmpegCommand)
-			testCommand := runCommand(testFullCommand, os.Stdin, os.Stdout, os.Stderr)
-			err = testCommand.Run()
-			if err != nil {
-				// Mark the host as bad
-				log.Warn().
-					Err(err).
-					Str("host", hostMapping.Servername).
-					Str("command", strings.Join(testFullCommand, " ")).
-					Msg("marking as bad")
+			// we need to wait for everything to be done
+			wg := sync.WaitGroup{}
+			wg.Add(2)
 
-				err = proc.AddState(processor.State{
-					HostId:    hostMapping.Id,
-					ProcessId: config.Program.Pid,
-					State:     "bad",
-				})
-				continue
-			}
-			log.Debug().Msg("ssh test succeeded")
+			go func() {
+				defer wg.Done()
+				pipeReader, pipeWriter := io.Pipe()
+				defer pipeWriter.Close()
+
+				testSshCommand := generateSshCommand(config, hostMapping.Hostname)
+				testSshCommand = removeFromSlice(testSshCommand, "-q")
+				testFfmpegCommand := config.Commands.Ffmpeg + " -version"
+				testFullCommand := append(testSshCommand, testFfmpegCommand)
+				testCommand := runCommand(testFullCommand, os.Stdin, pipeWriter, pipeWriter)
+
+				go func() {
+					defer wg.Done()
+					defer pipeReader.Close()
+					// discard data from pipReader
+					if _, err := io.Copy(io.Discard, pipeReader); err != nil {
+						log.Warn().Msg("pipeReader data could not be discarded")
+					}
+				}()
+
+				if err := testCommand.Run(); err != nil {
+					// Mark the host as bad
+					log.Warn().
+						Err(err).
+						Str("host", hostMapping.Servername).
+						Str("command", strings.Join(testFullCommand, " ")).
+						Msg("marking as bad")
+
+					err = proc.AddState(processor.State{
+						HostId:    hostMapping.Id,
+						ProcessId: config.Program.Pid,
+						State:     "bad",
+						})
+					return
+				}
+				log.Debug().Msg("ssh test succeeded")
+			}()
+		wg.Wait()
 		}
 
 		// If the host state is idle, we can use it immediately
