@@ -246,13 +246,11 @@ func getTargetHost(config *config.Config, proc *processor.Processor) (processor.
 						Str("command", strings.Join(testFullCommand, " ")).
 						Msg("marking as bad")
 
-					proc.AddState(
-						processor.State{
-							HostId:    hostMapping.Id,
-							ProcessId: config.Program.Pid,
-							State:     "bad",
-						}
-					)
+					proc.AddState(processor.State{
+						HostId:    hostMapping.Id,
+						ProcessId: config.Program.Pid,
+						State:     "bad",
+						})
 					return
 				}
 				log.Debug().Msg("ssh test succeeded")
