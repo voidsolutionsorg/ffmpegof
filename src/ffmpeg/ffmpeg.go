@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"regexp"
 	"strings"
-	"syscall"
 	"sync"
+	"syscall"
 
 	"github.com/rs/zerolog/log"
 	"github.com/sourcegraph/conc"
@@ -246,16 +246,23 @@ func getTargetHost(config *config.Config, proc *processor.Processor) (processor.
 						Str("command", strings.Join(testFullCommand, " ")).
 						Msg("marking as bad")
 
-					proc.AddState(processor.State{
+					err := proc.AddState(processor.State{
 						HostId:    hostMapping.Id,
 						ProcessId: config.Program.Pid,
 						State:     "bad",
-						})
+					})
+					if err != nil {
+						log.Error().
+							Err(err).
+							Str("host", hostMapping.Servername).
+							Str("command", strings.Join(testFullCommand, " ")).
+							Msg("failed to mark host as bad")
+					}
 					return
 				}
 				log.Debug().Msg("ssh test succeeded")
 			}()
-		wg.Wait()
+			wg.Wait()
 		}
 
 		// If the host state is idle, we can use it immediately
