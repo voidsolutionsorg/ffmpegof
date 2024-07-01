@@ -4,6 +4,7 @@ go 1.21.4
 
 require (
 	github.com/alecthomas/kong v0.8.1
+	github.com/alessio/shellescape v1.4.2
 	github.com/knadh/koanf/parsers/yaml v0.1.0
 	github.com/knadh/koanf/providers/env v0.1.0
 	github.com/knadh/koanf/providers/file v0.1.0

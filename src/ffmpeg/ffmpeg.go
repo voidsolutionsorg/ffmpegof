@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"regexp"
 	"strings"
 	"sync"
 	"syscall"
@@ -15,6 +14,7 @@ import (
 	"github.com/sourcegraph/conc"
 	"github.com/tminaorg/ffmpegof/src/config"
 	"github.com/tminaorg/ffmpegof/src/processor"
+	"github.com/alessio/shellescape"
 )
 
 // signum="", frame=""
@@ -385,17 +385,11 @@ func runRemoteFfmpeg(config *config.Config, proc *processor.Processor, cmd strin
 		stdout = stderr
 	}
 
-	// Append all the passed arguments with requoting of any problematic characters
+	// Append all the passed arguments
 	// Check for special flags that override the default stdout
 	foundSpecialFlag := false
-	re := regexp.MustCompile(`[*'()|\[\]\s]`)
 	for _, arg := range args {
-		// Match bad shell characters: * ' ( ) | [ ] or whitespace
-		if re.Match([]byte(arg)) {
-			ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, fmt.Sprintf("\"%s\"", arg))
-		} else {
-			ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, arg)
-		}
+		ffmpegofFfmpegCommand = append(ffmpegofFfmpegCommand, arg)
 
 		if !foundSpecialFlag && sliceContains(config.Commands.SpecialFlags, arg) {
 			stdout = os.Stdout
@@ -403,7 +397,7 @@ func runRemoteFfmpeg(config *config.Config, proc *processor.Processor, cmd strin
 		}
 	}
 
-	ffmpegofFullCommand := append(ffmpegofSshCommand, ffmpegofFfmpegCommand...)
+	ffmpegofFullCommand := append(ffmpegofSshCommand, shellescape.QuoteCommand(ffmpegofFfmpegCommand))
 
 	log.Info().Str("host", target.Servername).Msg("running command")
 	log.Debug().Str("command", strings.Join(ffmpegofFullCommand, " ")).Msg("remote")
