@@ -12,7 +12,7 @@ require (
 	github.com/knadh/koanf/v2 v2.0.1
 	github.com/lib/pq v1.10.9
 	github.com/oriser/regroup v0.0.0-20230527212431-1b00c9bdbc5b
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.32.0
 	github.com/sourcegraph/conc v0.3.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	modernc.org/sqlite v1.29.8
