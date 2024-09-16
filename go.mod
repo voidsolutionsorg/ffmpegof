@@ -3,7 +3,7 @@ module github.com/tminaorg/ffmpegof
 go 1.21.4
 
 require (
-	github.com/alecthomas/kong v0.9.0
+	github.com/alecthomas/kong v1.2.1
 	github.com/alessio/shellescape v1.4.2
 	github.com/knadh/koanf/parsers/yaml v0.1.0
 	github.com/knadh/koanf/providers/env v0.1.0
