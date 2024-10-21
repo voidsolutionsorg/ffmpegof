@@ -41,7 +41,7 @@ jobs:
 
       # goreleaser snapshot
       - name: Snapshot
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: release --snapshot --clean --config goreleaser/develop.yml
